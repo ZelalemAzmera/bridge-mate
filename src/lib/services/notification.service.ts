@@ -9,7 +9,7 @@ import { TelegramService } from '@/lib/telegram/telegram.service';
 export interface SendResult {
   success: boolean;
   messageId: string;
-  provider: 'sendet' | 'africastalking' | 'twilio' | 'telegram' | 'sandbox';
+  provider: 'smsethiopia' | 'smshub' | 'sendet' | 'africastalking' | 'twilio' | 'telegram' | 'sandbox';
   recipient: string;
   deliveredAt: string;
 }
@@ -40,6 +40,80 @@ export class NotificationService {
     // Channel: SMS
     const formattedRecipient = normalizeEthiopianPhone(recipient);
     const rawProvider = (process.env.SMS_PROVIDER || 'mock').toLowerCase().trim();
+
+    // 1. SMSEthiopia (smsethiopia.com - 100 free instant test SMS, Telebirr/CBE Birr reload)
+    const isSmsEthiopia =
+      rawProvider === 'smsethiopia' ||
+      rawProvider === 'smsethiopia.com' ||
+      Boolean(process.env.SMSETHIOPIA_API_KEY);
+    const smsEthiopiaApiKey = process.env.SMSETHIOPIA_API_KEY || process.env.SMS_API_KEY;
+
+    if (isSmsEthiopia && smsEthiopiaApiKey && !smsEthiopiaApiKey.includes('sample')) {
+      try {
+        // SMSEthiopia expects msisdn in 2519... format without leading '+'
+        const msisdn = formattedRecipient.replace(/^\+/, '');
+        const res = await fetch('https://smsethiopia.com/api/sms/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            KEY: smsEthiopiaApiKey,
+          },
+          body: JSON.stringify({
+            msisdn,
+            text: message,
+          }),
+        });
+
+        if (res.ok) {
+          return {
+            success: true,
+            messageId,
+            provider: 'smsethiopia',
+            recipient: formattedRecipient,
+            deliveredAt: new Date().toISOString(),
+          };
+        }
+      } catch (err) {
+        console.warn('[NotificationService] SMSEthiopia dispatch failed, trying fallbacks:', err);
+      }
+    }
+
+    // 2. SMSHub (smshub.et - Ethio Telecom & Safaricom with KYC verification)
+    const isSmsHub =
+      rawProvider === 'smshub' ||
+      rawProvider === 'smshub.et' ||
+      Boolean(process.env.SMSHUB_API_KEY);
+    const smsHubApiKey = process.env.SMSHUB_API_KEY || process.env.SMS_API_KEY;
+
+    if (isSmsHub && smsHubApiKey && !smsHubApiKey.includes('sample')) {
+      try {
+        // SMSHub accepts standard local 09... or 2519... format
+        const msisdn = formattedRecipient.replace(/^\+251/, '0');
+        const res = await fetch('https://smshub.et/api/sms', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${smsHubApiKey}`,
+          },
+          body: JSON.stringify({
+            msisdn,
+            text: message,
+          }),
+        });
+
+        if (res.ok) {
+          return {
+            success: true,
+            messageId,
+            provider: 'smshub',
+            recipient: formattedRecipient,
+            deliveredAt: new Date().toISOString(),
+          };
+        }
+      } catch (err) {
+        console.warn('[NotificationService] SMSHub dispatch failed, trying fallbacks:', err);
+      }
+    }
 
     // 1. Send.et (Ethiopian SMS Gateway for Ethio Telecom & Safaricom)
     const isSendEt = rawProvider === 'sendet' || rawProvider === 'send.et' || rawProvider === 'send_et';

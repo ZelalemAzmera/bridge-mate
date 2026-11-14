@@ -91,10 +91,10 @@ export function ChatContainer() {
       'Fursado shaqo oo noocee ah ayaa u furan dadka isticmaala akhriska shaashadda?',
     ],
   }[chatLanguage] || [
-    'What are the prerequisites to start web development?',
-    'What accommodation rights exist under Proclamation 568/2008?',
-    'What remote tech jobs are suitable for screen reader users?',
-  ];
+      'What are the prerequisites to start web development?',
+      'What accommodation rights exist under Proclamation 568/2008?',
+      'What remote tech jobs are suitable for screen reader users?',
+    ];
 
   const handleLanguageChange = (lang: SupportedLanguage) => {
     setChatLanguage(lang);
@@ -209,12 +209,12 @@ export function ChatContainer() {
         prev.map((msg) =>
           msg.id === assistantMessageId
             ? {
-                ...msg,
-                content:
-                  chatLanguage === 'am'
-                    ? 'ይቅርታ፣ ምላሽ ለመስጠት ችግር አጋጥሟል። እባክዎ ጥቂት ቆይተው እንደገና ይሞክሩ።'
-                    : 'I apologize, but an error occurred while generating a response. Please try again.',
-              }
+              ...msg,
+              content:
+                chatLanguage === 'am'
+                  ? 'ይቅርታ፣ ምላሽ ለመስጠት ችግር አጋጥሟል። እባክዎ ጥቂት ቆይተው እንደገና ይሞክሩ።'
+                  : 'I apologize, but an error occurred while generating a response. Please try again.',
+            }
             : msg
         )
       );
@@ -236,11 +236,10 @@ export function ChatContainer() {
               <button
                 key={opt.code}
                 onClick={() => handleLanguageChange(opt.code)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer flex items-center gap-1 ${
-                  isSelected
-                    ? 'bg-primary text-white shadow-xs font-bold'
-                    : 'bg-card text-muted-foreground hover:text-foreground border border-border'
-                }`}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer flex items-center gap-1 ${isSelected
+                  ? 'bg-primary text-white shadow-xs font-bold'
+                  : 'bg-card text-muted-foreground hover:text-foreground border border-border'
+                  }`}
                 aria-pressed={isSelected}
               >
                 {isSelected && <Check className="w-3 h-3" />}

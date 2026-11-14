@@ -54,12 +54,14 @@ export const envSchema = z.object({
   // Storage (Vercel Blob)
   BLOB_READ_WRITE_TOKEN: z.string().optional(),
 
-  // Notifications (SMS Gateways: Send.et, Africa's Talking, Twilio, Mock)
+  // Notifications (SMS Gateways: SMSEthiopia, SMSHub, Send.et, Africa's Talking, Twilio, Mock)
   SMS_PROVIDER: z
-    .enum(['send.et', 'sendet', 'send_et', 'africas_talking', 'africastalking', 'twilio', 'mock', 'sandbox'])
+    .enum(['smsethiopia', 'smshub', 'send.et', 'sendet', 'send_et', 'africas_talking', 'africastalking', 'twilio', 'mock', 'sandbox'])
     .default('mock'),
   SMS_API_KEY: z.string().optional(),
   SMS_SENDER_ID: z.string().default('BridgeMate'),
+  SMSETHIOPIA_API_KEY: z.string().optional(),
+  SMSHUB_API_KEY: z.string().optional(),
   SENDET_API_KEY: z.string().optional(),
   SEND_ET_API_KEY: z.string().optional(),
   SEND_ET_SENDER_ID: z.string().optional(),
