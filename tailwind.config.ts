@@ -10,28 +10,49 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: 'var(--background, #F8FAFC)',
-        foreground: 'var(--foreground, #0F172A)',
+        // Strict Four-Color Design System
+        // Primary: #142B27 (Deep Forest Pine / Hunter Evergreen)
+        // Secondary: #D9E5D8 (Soft Sage / Pale Laurel)
+        // Accent: #D69B52 (Warm Ochre / Honey Amber)
+        // Neutral: #F7F6F0 (Warm Bone / Architectural Off-White)
+        brand: {
+          primary: '#142B27',
+          secondary: '#D9E5D8',
+          accent: '#D69B52',
+          neutral: '#F7F6F0',
+          dark: '#0D1916',
+          darkSurface: '#142521',
+        },
+        background: 'var(--background, #F7F6F0)',
+        foreground: 'var(--foreground, #142B27)',
         card: {
           DEFAULT: 'var(--card, #FFFFFF)',
-          foreground: 'var(--card-foreground, #0F172A)',
+          foreground: 'var(--card-foreground, #142B27)',
         },
         primary: {
-          DEFAULT: '#1D4ED8', // Accessible Blue 7:1 against white
-          foreground: '#FFFFFF',
-          highContrast: '#000000',
+          DEFAULT: 'var(--primary, #142B27)',
+          foreground: 'var(--primary-foreground, #F7F6F0)',
+          hover: '#0E1E1B',
+        },
+        secondary: {
+          DEFAULT: 'var(--secondary, #D9E5D8)',
+          foreground: 'var(--secondary-foreground, #142B27)',
+        },
+        accent: {
+          DEFAULT: 'var(--accent, #D69B52)',
+          foreground: 'var(--accent-foreground, #142B27)',
         },
         warning: {
-          DEFAULT: '#B45309', // Alert Amber 4.5:1
+          DEFAULT: '#B45309',
           foreground: '#FFFFFF',
         },
-        ring: 'var(--ring, #1D4ED8)', // 3px Focus Outline
+        ring: 'var(--ring, #142B27)',
         muted: {
-          DEFAULT: 'var(--muted, #F1F5F9)',
-          foreground: 'var(--muted-foreground, #475569)',
+          DEFAULT: 'var(--muted, #EDEAE1)',
+          foreground: 'var(--muted-foreground, #42524D)',
         },
-        border: 'var(--border, #E2E8F0)',
-        input: 'var(--input, #E2E8F0)',
+        border: 'var(--border, #DDD9CD)',
+        input: 'var(--input, #BBB5A4)',
       },
       transitionTimingFunction: {
         'ease-out-custom': 'cubic-bezier(0.23, 1, 0.32, 1)',
@@ -39,14 +60,22 @@ const config: Config = {
         'ease-drawer': 'cubic-bezier(0.32, 0.72, 0, 1)',
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'sans-serif'],
-        ethiopic: ['var(--font-noto-ethiopic)', 'sans-serif'],
+        serif: ['var(--font-serif)', 'Charter', 'Iowan Old Style', 'Palatino Linotype', 'Georgia', 'serif'],
+        sans: ['var(--font-sans)', 'Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+        ethiopic: ['var(--font-ethiopic)', 'Noto Sans Ethiopic', 'Abyssinica SIL', 'Nyala', 'sans-serif'],
         dyslexic: ['var(--font-dyslexic)', 'sans-serif'],
       },
       borderRadius: {
-        lg: '0.5rem',
-        md: '0.375rem',
-        sm: '0.25rem',
+        lg: '6px',
+        md: '4px',
+        sm: '2px',
+      },
+      boxShadow: {
+        xs: '0 1px 2px 0 rgba(20, 43, 39, 0.05)',
+        sm: '0 2px 4px 0 rgba(20, 43, 39, 0.06)',
+        md: '0 4px 12px -2px rgba(20, 43, 39, 0.08)',
+        lg: '0 12px 24px -4px rgba(20, 43, 39, 0.12)',
+        editorial: '0 18px 40px -8px rgba(20, 43, 39, 0.14)',
       },
     },
   },

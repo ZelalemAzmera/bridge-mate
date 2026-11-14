@@ -3,10 +3,12 @@
 import { useState, useEffect, useCallback } from 'react';
 
 export type FontScale = 100 | 125 | 150 | 200;
-export type SupportedLanguage = 'am' | 'om' | 'ti' | 'so' | 'en';
+export type SupportedLanguage = 'en' | 'am' | 'ti' | 'om' | 'so' | 'ar';
+export type SupportedTheme = 'light' | 'dark' | 'high-contrast';
 
 export interface AccessibilitySettings {
   fontScale: FontScale;
+  theme: SupportedTheme;
   highContrast: boolean;
   dyslexicFont: boolean;
   audioAssist: boolean;
@@ -18,6 +20,7 @@ const STORAGE_KEY = 'bridgemate_a11y_settings';
 
 const DEFAULT_SETTINGS: AccessibilitySettings = {
   fontScale: 100,
+  theme: 'light',
   highContrast: false,
   dyslexicFont: false,
   audioAssist: false,
@@ -33,12 +36,18 @@ export function useAccessibility() {
     setIsMounted(true);
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
+      if (saved && saved.trim()) {
         const parsed = JSON.parse(saved);
-        setSettings((prev) => ({ ...prev, ...parsed }));
+        if (parsed && typeof parsed === 'object') {
+          // Backward compatibility for highContrast boolean to theme
+          if (parsed.highContrast && !parsed.theme) {
+            parsed.theme = 'high-contrast';
+          }
+          setSettings((prev) => ({ ...prev, ...parsed }));
+        }
       }
     } catch {
-      // Fallback to default settings
+      // Storage parsing fallback
     }
   }, []);
 
@@ -53,12 +62,13 @@ export function useAccessibility() {
 
     const root = document.documentElement;
     root.setAttribute('data-font-scale', settings.fontScale.toString());
-    root.setAttribute('data-high-contrast', settings.highContrast ? 'true' : 'false');
+    root.setAttribute('data-theme', settings.theme);
+    root.setAttribute('data-high-contrast', settings.theme === 'high-contrast' ? 'true' : 'false');
     root.setAttribute('data-dyslexic', settings.dyslexicFont ? 'true' : 'false');
     root.setAttribute('lang', settings.language);
 
     // RTL Handling for Somali / Arabic script per Track 3 spec
-    const shouldBeRtl = settings.isRtl || settings.language === 'so';
+    const shouldBeRtl = settings.isRtl || settings.language === 'so' || settings.language === 'ar';
     root.setAttribute('dir', shouldBeRtl ? 'rtl' : 'ltr');
   }, [settings, isMounted]);
 
@@ -66,8 +76,57 @@ export function useAccessibility() {
     setSettings((prev) => ({ ...prev, fontScale: scale }));
   }, []);
 
+  const increaseFontSize = useCallback(() => {
+    setSettings((prev) => {
+      const scales: FontScale[] = [100, 125, 150, 200];
+      const currentIndex = scales.indexOf(prev.fontScale);
+      const nextIndex = Math.min(currentIndex + 1, scales.length - 1);
+      return { ...prev, fontScale: scales[nextIndex] };
+    });
+  }, []);
+
+  const decreaseFontSize = useCallback(() => {
+    setSettings((prev) => {
+      const scales: FontScale[] = [100, 125, 150, 200];
+      const currentIndex = scales.indexOf(prev.fontScale);
+      const nextIndex = Math.max(currentIndex - 1, 0);
+      return { ...prev, fontScale: scales[nextIndex] };
+    });
+  }, []);
+
+  const setTheme = useCallback((theme: SupportedTheme) => {
+    setSettings((prev) => ({
+      ...prev,
+      theme,
+      highContrast: theme === 'high-contrast',
+    }));
+  }, []);
+
+  const cycleTheme = useCallback(() => {
+    setSettings((prev) => {
+      const nextTheme: SupportedTheme =
+        prev.theme === 'light'
+          ? 'dark'
+          : prev.theme === 'dark'
+          ? 'high-contrast'
+          : 'light';
+      return {
+        ...prev,
+        theme: nextTheme,
+        highContrast: nextTheme === 'high-contrast',
+      };
+    });
+  }, []);
+
   const toggleHighContrast = useCallback(() => {
-    setSettings((prev) => ({ ...prev, highContrast: !prev.highContrast }));
+    setSettings((prev) => {
+      const nextHigh = prev.theme !== 'high-contrast';
+      return {
+        ...prev,
+        theme: nextHigh ? 'high-contrast' : 'light',
+        highContrast: nextHigh,
+      };
+    });
   }, []);
 
   const toggleDyslexicFont = useCallback(() => {
@@ -82,7 +141,7 @@ export function useAccessibility() {
     setSettings((prev) => ({
       ...prev,
       language: lang,
-      isRtl: lang === 'so' ? true : prev.isRtl,
+      isRtl: lang === 'so' || lang === 'ar' ? true : prev.isRtl,
     }));
   }, []);
 
@@ -98,6 +157,10 @@ export function useAccessibility() {
     ...settings,
     isMounted,
     setFontScale,
+    increaseFontSize,
+    decreaseFontSize,
+    setTheme,
+    cycleTheme,
     toggleHighContrast,
     toggleDyslexicFont,
     toggleAudioAssist,
@@ -106,4 +169,3 @@ export function useAccessibility() {
     resetAccessibility,
   };
 }
-

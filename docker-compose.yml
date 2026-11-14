@@ -1,0 +1,80 @@
+services:
+  # ── nginx: serves static files on port 8080 ────────────────────────────────
+  web:
+    image: nginx:1.25-alpine
+    container_name: bridgemate-web
+    ports:
+      - "8080:80"
+    volumes:
+      - ./savanna:/usr/share/nginx/html/savanna:ro
+      - ./module:/usr/share/nginx/html/module:ro
+      - ./demo:/usr/share/nginx/html/demo:ro
+      - ./data:/usr/share/nginx/html/data:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80/module/db-assistant.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Express API: answers, escalations, SMS, Telegram ──────────────────────
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: bridgemate-api
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.example
+    volumes:
+      - ./data:/app/../data:ro
+      - ./module:/app/../module:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+
+  # ── crawl4ai: Tier-1 scraper (optional — API falls back gracefully) ────────
+  crawl4ai:
+    image: unclecode/crawl4ai:latest
+    container_name: bridgemate-crawl4ai
+    ports:
+      - "11235:11235"
+    environment:
+      - CRAWL4AI_API_TOKEN=${CRAWL4AI_TOKEN:-}
+    restart: unless-stopped
+    profiles:
+      - full
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:11235/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── ollama: local LLM (optional — API falls back to BM25) ─────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: bridgemate-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    restart: unless-stopped
+    profiles:
+      - full
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  ollama-models:

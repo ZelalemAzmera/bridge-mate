@@ -1,0 +1,436 @@
+openapi: "3.0.3"
+info:
+  title: BridgeMate API
+  version: "2.0.0"
+  description: |
+    ALX Ethiopia Digital Bridge Accessibility Hackathon — Track 3 API.
+
+    Zero paid-API lock-in. AI_PROVIDER=none uses BM25 offline search.
+    Supports Amharic (am), Tigrinya (ti), Afaan Oromoo (om), Somali (so), Arabic (ar), English (en).
+
+    **Legal**: Accommodation requests cite Ethiopian Proclamation No. 1156/2019 Art. 29 and No. 568/2008.
+    No medical disclosure required.
+  contact:
+    name: BridgeMate Team
+    url: https://github.com/alx-africa
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3000
+    description: Local development
+  - url: http://localhost:8080/api
+    description: Via nginx proxy (docker compose up)
+
+tags:
+  - name: AI
+    description: Question answering and content indexing
+  - name: Support
+    description: Human escalation and ticket management
+  - name: SMS
+    description: SMS gateway (plain text ≤160 chars)
+  - name: Jobs
+    description: Ethiopian job listings
+  - name: Webhooks
+    description: Event notification registration
+  - name: Health
+    description: Service health
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Service health check
+      operationId: getHealth
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+                  provider: { type: string, example: none }
+                  sections: { type: integer, example: 5 }
+                  jobs: { type: integer, example: 6 }
+                  uptime: { type: integer, example: 120 }
+
+  /api/v1/ask:
+    post:
+      tags: [AI]
+      summary: Answer a question using the configured AI provider
+      description: |
+        Accepts a question and language code. Uses the AI_PROVIDER chain:
+        1. Cloud LLM (if OPENAI_API_KEY or GEMINI_API_KEY set)
+        2. Local Ollama (if OLLAMA_URL reachable)
+        3. BM25 offline search (always works, zero API key needed)
+
+        Returns an answer with citations.
+      operationId: askQuestion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [question]
+              properties:
+                question:
+                  type: string
+                  example: "What is shaping the future of VA work in Ethiopia?"
+                language:
+                  type: string
+                  enum: [en, am, ti, om, so, ar]
+                  default: en
+                  example: am
+            examples:
+              amharic:
+                summary: Amharic question
+                value:
+                  question: "የVA ሥራ ወደፊት ምን ይሆናል?"
+                  language: am
+              english:
+                summary: English question
+                value:
+                  question: "What skills do clients value most in virtual assistants?"
+                  language: en
+      responses:
+        "200":
+          description: Answer with citations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  answer:
+                    type: string
+                    example: "AI tools are transforming the VA industry. VAs who embrace AI as a productivity multiplier will be in highest demand."
+                  sources:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Source"
+                  provider:
+                    type: string
+                    example: none
+                  language:
+                    type: string
+                    example: am
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/content:
+    post:
+      tags: [AI]
+      summary: Index a new URL or inline sections for the knowledge base
+      description: |
+        Scrapes a URL (crawl4ai → Jina → Readability → offline) or accepts inline sections.
+        Indexed content is immediately searchable by /api/v1/ask.
+      operationId: indexContent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  required: [url]
+                  properties:
+                    url:
+                      type: string
+                      format: uri
+                      example: "https://savanna.alxafrica.com/pages/concept"
+                    title:
+                      type: string
+                      example: "ALX VA Curriculum — Module 3"
+                - type: object
+                  required: [sections]
+                  properties:
+                    sections:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/Section"
+            examples:
+              url:
+                summary: Scrape a URL
+                value:
+                  url: "https://savanna.alxafrica.com/pages/concept-with-navigation"
+              inline:
+                summary: Inline sections
+                value:
+                  sections:
+                    - id: "wcag-overview"
+                      heading: "WCAG 2.2 Overview"
+                      content: "WCAG 2.2 Level AA requires perceivable, operable, understandable, robust interfaces."
+                      url: "https://www.w3.org/TR/WCAG22/"
+      responses:
+        "201":
+          description: Content indexed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url: { type: string }
+                  tier: { type: string, example: jina }
+                  indexed: { type: integer }
+                  total: { type: integer }
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/escalations:
+    post:
+      tags: [Support]
+      summary: Create a human support escalation ticket
+      description: |
+        Queues a conversation for a human tutor/agent.
+        No PII required. Cites Ethiopian Proclamation 1156/2019 Art. 29.
+        Webhooks are notified on new ticket creation.
+      operationId: createEscalation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                conversation:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      role: { type: string, enum: [user, assistant] }
+                      content: { type: string }
+                language:
+                  type: string
+                  default: en
+                  example: am
+                pageUrl:
+                  type: string
+                  example: "/savanna/pages/concept-with-navigation.html"
+                element:
+                  type: string
+                  example: "button#submit"
+            example:
+              conversation:
+                - role: user
+                  content: "How do I request a disability accommodation?"
+                - role: assistant
+                  content: "Under Proclamation 1156/2019 Art. 29…"
+              language: am
+              pageUrl: "/demo/blank.html"
+      responses:
+        "201":
+          description: Ticket created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticketId: { type: string, example: "BM-M4G7K2" }
+                  status: { type: string, example: open }
+
+    get:
+      tags: [Support]
+      summary: List all escalation tickets (helper dashboard)
+      operationId: listEscalations
+      responses:
+        "200":
+          description: Ticket list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tickets:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Ticket"
+
+  /api/v1/escalations/{ticketId}:
+    patch:
+      tags: [Support]
+      summary: Update ticket status (accept / close)
+      operationId: updateEscalation
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string, enum: [open, in-progress, closed] }
+      responses:
+        "200":
+          description: Updated ticket
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/accommodations/request:
+    post:
+      tags: [Support]
+      summary: Generate accommodation request letter (no medical disclosure)
+      operationId: requestAccommodation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                jobTitle: { type: string, example: "Junior Software Developer" }
+                organization: { type: string, example: "EthioTech Solutions PLC" }
+                language: { type: string, default: en }
+      responses:
+        "201":
+          description: Accommodation letter with legal citations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticketId: { type: string }
+                  letter: { type: string }
+                  legalBasis: { type: array, items: { type: string } }
+                  noMedicalDisclosureRequired: { type: boolean, example: true }
+
+  /sms/inbound:
+    post:
+      tags: [SMS]
+      summary: Handle inbound SMS message (plain text ≤160 chars response)
+      description: |
+        Receives an SMS, runs BM25 search, returns plain text ≤160 characters.
+        Compatible with 2G/3G SMS gateways (Africa's Talking, Twilio, etc.)
+      operationId: smsInbound
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [from, text]
+              properties:
+                from: { type: string, example: "+251912345678" }
+                text: { type: string, example: "WCAG keyboard navigation?" }
+      responses:
+        "200":
+          description: SMS reply (≤160 chars plain text)
+          content:
+            text/plain:
+              schema:
+                type: string
+                maxLength: 160
+                example: "WCAG 2.2 requires all pages to be fully keyboard-accessible. Use Tab, Enter, Escape keys. Focus must be visible at all times."
+
+  /api/v1/webhooks:
+    post:
+      tags: [Webhooks]
+      summary: Register a webhook URL for escalation events
+      operationId: registerWebhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  example: "https://myapp.example.com/hooks/bridgemate"
+      responses:
+        "201":
+          description: Webhook registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  registered: { type: string }
+                  total: { type: integer }
+
+  /api/v1/jobs:
+    get:
+      tags: [Jobs]
+      summary: List Ethiopian tech job postings (schema.org/JobPosting)
+      operationId: listJobs
+      responses:
+        "200":
+          description: Job listings with schema.org JSON-LD
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  "@context": { type: string }
+                  "@type": { type: string }
+                  numberOfItems: { type: integer }
+                  itemListElement:
+                    type: array
+                    items:
+                      type: object
+
+components:
+  schemas:
+    Source:
+      type: object
+      properties:
+        title: { type: string, example: "What is Shaping the Future of VA Work?" }
+        url: { type: string, example: "/savanna/pages/concept-with-navigation.html#what-is-shaping" }
+
+    Section:
+      type: object
+      required: [id, heading, content]
+      properties:
+        id: { type: string }
+        heading: { type: string }
+        content: { type: string }
+        url: { type: string }
+
+    Ticket:
+      type: object
+      properties:
+        ticketId: { type: string, example: "BM-M4G7K2" }
+        createdAt: { type: string, format: date-time }
+        language: { type: string, example: am }
+        messageCount: { type: integer }
+        status: { type: string, enum: [open, in-progress, closed] }
+        pageUrl: { type: string }
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error: { type: string }
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error: { type: string }
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error: { type: string }

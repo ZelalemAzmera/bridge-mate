@@ -30,6 +30,9 @@
   ],
   "exclude": [
     "node_modules",
-    ".agents"
+    ".agents",
+    "vendor",
+    "savanna",
+    "api"
   ]
 }

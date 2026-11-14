@@ -4,30 +4,32 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-all duration-150 ease-out-custom active:scale-[0.97] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 cursor-pointer select-none',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold tracking-tight transition-all duration-150 ease-out-custom active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 cursor-pointer select-none',
   {
     variants: {
       variant: {
         default:
-          'bg-primary text-white hover:bg-blue-700 shadow-sm hover:shadow active:bg-blue-800',
-        destructive:
-          'bg-red-600 text-white hover:bg-red-700 shadow-sm active:bg-red-800',
-        outline:
-          'border border-border bg-card hover:bg-muted text-foreground shadow-xs hover:border-slate-400',
+          'bg-[var(--brand-primary)] text-[var(--brand-neutral)] hover:bg-[#0E1E1B] shadow-xs active:bg-[#081210] border border-[var(--brand-primary)]',
         secondary:
-          'bg-muted text-foreground hover:bg-slate-200 border border-border shadow-xs',
+          'bg-[var(--brand-secondary)] text-[var(--brand-primary)] hover:bg-[#CCDACC] border border-[#C5D5C4] shadow-xs',
+        accent:
+          'bg-[var(--brand-accent)] text-[var(--brand-primary)] hover:bg-[#C88E45] font-bold shadow-xs border border-[#C88E45]',
+        outline:
+          'border border-[var(--border-default)] bg-transparent hover:bg-[var(--brand-secondary)]/30 text-[var(--text-primary)] hover:border-[var(--brand-primary)]',
         ghost:
-          'hover:bg-muted hover:text-foreground text-foreground',
+          'hover:bg-[var(--brand-secondary)]/40 hover:text-[var(--brand-primary)] text-[var(--text-primary)]',
         link:
-          'text-primary underline-offset-4 hover:underline active:scale-100',
+          'text-[var(--brand-primary)] underline-offset-4 hover:underline active:scale-100',
+        destructive:
+          'bg-[#8A2525] text-[#F7F6F0] hover:bg-[#721C1C] shadow-xs',
         highContrast:
-          'bg-amber-400 text-black border-2 border-white font-extrabold hover:bg-amber-300',
+          'bg-[#FFFF00] text-[#000000] border-2 border-[#000000] font-black hover:bg-[#EEEE00]',
       },
       size: {
         default: 'h-11 px-5 py-2.5 min-w-[44px]', // 44px min touch target WCAG 2.2 AA
-        sm: 'h-9 rounded-md px-3 text-xs min-w-[36px]',
-        lg: 'h-13 rounded-lg px-8 text-base font-bold min-w-[48px]',
-        icon: 'h-11 w-11 min-h-[44px] min-w-[44px] rounded-lg',
+        sm: 'h-9 rounded-sm px-3.5 text-xs min-w-[36px]',
+        lg: 'h-12 rounded-md px-7 text-sm font-bold min-w-[48px]',
+        icon: 'h-11 w-11 min-h-[44px] min-w-[44px] rounded-md',
       },
     },
     defaultVariants: {

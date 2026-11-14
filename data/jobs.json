@@ -1,0 +1,241 @@
+[
+  {
+    "@type": "JobPosting",
+    "id": "job-001",
+    "title": "Junior Software Developer",
+    "organization": "EthioTech Solutions PLC",
+    "hiringOrganization": {
+      "@type": "Organization",
+      "name": "EthioTech Solutions PLC",
+      "sameAs": "https://ethiotech.example.com"
+    },
+    "jobLocation": {
+      "@type": "Place",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Addis Ababa",
+        "addressRegion": "Addis Ababa City Administration",
+        "addressCountry": "ET"
+      }
+    },
+    "jobLocationType": "TELECOMMUTE",
+    "employmentType": "FULL_TIME",
+    "datePosted": "2026-11-14",
+    "datePostedEthiopic": "5 ኅዳር 2017",
+    "validThrough": "2026-12-14",
+    "baseSalary": {
+      "@type": "MonetaryAmount",
+      "currency": "ETB",
+      "value": {
+        "@type": "QuantitativeValue",
+        "minValue": 15000,
+        "maxValue": 25000,
+        "unitText": "MONTH"
+      }
+    },
+    "salaryDisplay": "ETB 15,000 – 25,000/month",
+    "description": "Build web and mobile applications using JavaScript, React, and Node.js. Work remotely with flexible hours.",
+    "skills": ["JavaScript", "React", "Node.js", "REST APIs"],
+    "accommodations": ["Screen reader compatible tools", "Flexible work hours", "Remote work available"],
+    "applyUrl": "https://ethiotech.example.com/jobs/junior-developer",
+    "telegramAlert": true
+  },
+  {
+    "@type": "JobPosting",
+    "id": "job-002",
+    "title": "Data Analyst",
+    "organization": "Birr Analytics Ltd",
+    "hiringOrganization": {
+      "@type": "Organization",
+      "name": "Birr Analytics Ltd",
+      "sameAs": "https://birranalytics.example.com"
+    },
+    "jobLocation": {
+      "@type": "Place",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Addis Ababa",
+        "addressRegion": "Addis Ababa City Administration",
+        "addressCountry": "ET"
+      }
+    },
+    "jobLocationType": "TELECOMMUTE",
+    "employmentType": "FULL_TIME",
+    "datePosted": "2026-11-14",
+    "datePostedEthiopic": "5 ኅዳር 2017",
+    "validThrough": "2026-12-15",
+    "baseSalary": {
+      "@type": "MonetaryAmount",
+      "currency": "ETB",
+      "value": {
+        "@type": "QuantitativeValue",
+        "minValue": 18000,
+        "maxValue": 30000,
+        "unitText": "MONTH"
+      }
+    },
+    "salaryDisplay": "ETB 18,000 – 30,000/month",
+    "description": "Analyze datasets to provide business insights. Use Python, SQL, and Power BI. Assistive technology welcomed.",
+    "skills": ["Python", "SQL", "Power BI", "Excel"],
+    "accommodations": ["Assistive technology support", "Screen magnification available", "Ergonomic workspace"],
+    "applyUrl": "https://birranalytics.example.com/jobs/data-analyst",
+    "telegramAlert": true
+  },
+  {
+    "@type": "JobPosting",
+    "id": "job-003",
+    "title": "Virtual Assistant (Remote)",
+    "organization": "Nile BPO Services",
+    "hiringOrganization": {
+      "@type": "Organization",
+      "name": "Nile BPO Services",
+      "sameAs": "https://nilebpo.example.com"
+    },
+    "jobLocation": {
+      "@type": "Place",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Addis Ababa",
+        "addressCountry": "ET"
+      }
+    },
+    "jobLocationType": "TELECOMMUTE",
+    "employmentType": "FULL_TIME",
+    "datePosted": "2026-11-13",
+    "datePostedEthiopic": "4 ኅዳር 2017",
+    "validThrough": "2026-12-13",
+    "baseSalary": {
+      "@type": "MonetaryAmount",
+      "currency": "ETB",
+      "value": {
+        "@type": "QuantitativeValue",
+        "minValue": 10000,
+        "maxValue": 18000,
+        "unitText": "MONTH"
+      }
+    },
+    "salaryDisplay": "ETB 10,000 – 18,000/month",
+    "description": "Provide virtual executive support: scheduling, email management, research, and client communication. Full remote.",
+    "skills": ["Communication", "Scheduling", "Email Management", "MS Office"],
+    "accommodations": ["Remote work", "Flexible hours", "Text-based communication options"],
+    "applyUrl": "https://nilebpo.example.com/jobs/virtual-assistant",
+    "telegramAlert": false
+  },
+  {
+    "@type": "JobPosting",
+    "id": "job-004",
+    "title": "UI/UX Designer (Accessibility Focus)",
+    "organization": "DigitalBridge Design Studio",
+    "hiringOrganization": {
+      "@type": "Organization",
+      "name": "DigitalBridge Design Studio"
+    },
+    "jobLocation": {
+      "@type": "Place",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Addis Ababa",
+        "addressCountry": "ET"
+      }
+    },
+    "jobLocationType": "TELECOMMUTE",
+    "employmentType": "CONTRACT",
+    "datePosted": "2026-11-12",
+    "datePostedEthiopic": "3 ኅዳር 2017",
+    "validThrough": "2026-12-12",
+    "baseSalary": {
+      "@type": "MonetaryAmount",
+      "currency": "ETB",
+      "value": {
+        "@type": "QuantitativeValue",
+        "minValue": 20000,
+        "maxValue": 35000,
+        "unitText": "MONTH"
+      }
+    },
+    "salaryDisplay": "ETB 20,000 – 35,000/month",
+    "description": "Design accessible digital interfaces following WCAG 2.2 AA guidelines. Create inclusive experiences for diverse Ethiopian users.",
+    "skills": ["Figma", "WCAG", "Accessibility", "User Research"],
+    "accommodations": ["Screen reader compatible design tools", "Voice-driven meetings available", "Flexible deadlines"],
+    "applyUrl": "https://digitalbridge.example.com/jobs/ux-designer",
+    "telegramAlert": true
+  },
+  {
+    "@type": "JobPosting",
+    "id": "job-005",
+    "title": "Network Engineer",
+    "organization": "Ethio Telecom Partner Network",
+    "hiringOrganization": {
+      "@type": "Organization",
+      "name": "Ethio Telecom Partner Network"
+    },
+    "jobLocation": {
+      "@type": "Place",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Addis Ababa",
+        "addressCountry": "ET"
+      }
+    },
+    "jobLocationType": "ON_SITE",
+    "employmentType": "FULL_TIME",
+    "datePosted": "2026-11-11",
+    "datePostedEthiopic": "2 ኅዳር 2017",
+    "validThrough": "2026-12-11",
+    "baseSalary": {
+      "@type": "MonetaryAmount",
+      "currency": "ETB",
+      "value": {
+        "@type": "QuantitativeValue",
+        "minValue": 22000,
+        "maxValue": 40000,
+        "unitText": "MONTH"
+      }
+    },
+    "salaryDisplay": "ETB 22,000 – 40,000/month",
+    "description": "Design and maintain enterprise network infrastructure. CCNA or equivalent required. Reasonable adjustments provided under Proclamation 1156/2019.",
+    "skills": ["CCNA", "Cisco", "Network Security", "Linux"],
+    "accommodations": ["Reasonable adjustments per Proclamation 1156/2019 Art. 29", "Accessible work environment"],
+    "applyUrl": "https://ethiotelecom-partner.example.com/jobs/network-engineer",
+    "telegramAlert": false
+  },
+  {
+    "@type": "JobPosting",
+    "id": "job-006",
+    "title": "Content Creator & Digital Marketer",
+    "organization": "Addis Creative Agency",
+    "hiringOrganization": {
+      "@type": "Organization",
+      "name": "Addis Creative Agency"
+    },
+    "jobLocation": {
+      "@type": "Place",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Addis Ababa",
+        "addressCountry": "ET"
+      }
+    },
+    "jobLocationType": "TELECOMMUTE",
+    "employmentType": "PART_TIME",
+    "datePosted": "2026-11-10",
+    "datePostedEthiopic": "1 ኅዳር 2017",
+    "validThrough": "2026-12-10",
+    "baseSalary": {
+      "@type": "MonetaryAmount",
+      "currency": "ETB",
+      "value": {
+        "@type": "QuantitativeValue",
+        "minValue": 8000,
+        "maxValue": 15000,
+        "unitText": "MONTH"
+      }
+    },
+    "salaryDisplay": "ETB 8,000 – 15,000/month",
+    "description": "Create Amharic and English digital content for social media, blogs, and campaigns. Part-time remote work.",
+    "skills": ["Copywriting", "Social Media", "Amharic", "SEO"],
+    "accommodations": ["Voice-to-text tools supported", "Flexible hours", "Remote work"],
+    "applyUrl": "https://addiscreative.example.com/jobs/content-creator",
+    "telegramAlert": false
+  }
+]

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ethiopian Tech Jobs — ALX Career Gateway | የኢትዮጵያ የቴክ ሥራዎች</title>
+  <meta name="description" content="Browse accessible Ethiopian tech job listings with accommodation support, ETB salary, and Ethiopian calendar dates.">
+
+  <!-- Savanna Bootstrap (DO NOT MODIFY) -->
+  <link rel="stylesheet" href="../assets/css/app.css">
+  <link rel="stylesheet" href="../assets/css/application_alx.css">
+
+  <!-- schema.org/JobPosting JSON-LD -->
+  <script type="application/ld+json" id="jobs-jsonld">
+  {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Ethiopian Tech Jobs — BridgeMate Career Gateway",
+    "description": "Accessible tech job listings with accommodation support for Ethiopian professionals",
+    "numberOfItems": 6
+  }
+  </script>
+
+  <style>
+    /* Non-destructive accessibility patches layered ON TOP of Savanna CSS */
+    :focus-visible {
+      outline: 3px solid #f5a300 !important;
+      outline-offset: 2px !important;
+    }
+    .skip-link {
+      position: absolute; top: -40px; left: 0;
+      background: #f5a300; color: #000;
+      padding: 8px 16px; font-weight: 700;
+      text-decoration: none; z-index: 9999;
+      border-radius: 0 0 8px 0;
+    }
+    .skip-link:focus { top: 0; }
+
+    /* Job cards */
+    .bm-jobs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(340px,100%), 1fr));
+      gap: 20px;
+      margin: 24px 0;
+    }
+    .bm-job-card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      scroll-margin-top: 72px;
+    }
+    .bm-job-card:focus-within {
+      box-shadow: 0 0 0 3px #f5a300;
+    }
+    .bm-job-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin: 0 0 4px;
+    }
+    .bm-job-org {
+      color: #555;
+      font-size: 0.9rem;
+      margin: 0 0 10px;
+    }
+    .bm-job-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .bm-pill {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: #fff8e1;
+      border: 1px solid #f5a300;
+      color: #7a5c00;
+    }
+    .bm-pill-remote { background: #e8f5e9; border-color: #81c784; color: #2e7d32; }
+    .bm-pill-salary { background: #e3f2fd; border-color: #64b5f6; color: #1565c0; }
+    .bm-job-desc {
+      font-size: 0.85rem;
+      color: #444;
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+    .bm-job-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .bm-btn {
+      display: inline-block;
+      min-height: 44px;
+      padding: 10px 18px;
+      border-radius: 22px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-decoration: none;
+      border: none;
+      transition: background 0.15s;
+    }
+    .bm-btn-primary {
+      background: #f5a300;
+      color: #000;
+    }
+    .bm-btn-primary:hover, .bm-btn-primary:focus-visible {
+      background: #c47f00;
+      color: #000;
+    }
+    .bm-btn-secondary {
+      background: #fff;
+      color: #333;
+      border: 1px solid #ddd;
+    }
+    .bm-btn-secondary:hover, .bm-btn-secondary:focus-visible {
+      background: #f5f5f5;
+    }
+    .bm-accommodation-btn {
+      background: #fff;
+      color: #1565c0;
+      border: 1px solid #1565c0;
+    }
+    .bm-accommodation-btn:hover, .bm-accommodation-btn:focus-visible {
+      background: #1565c0;
+      color: #fff;
+    }
+
+    /* Audio transcript (WCAG 1.2.1) */
+    .bm-transcript {
+      position: absolute;
+      width: 1px; height: 1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+    }
+    .bm-listen-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      min-height: 44px;
+      min-width: 44px;
+      padding: 0 8px;
+      color: #555;
+      position: absolute;
+      top: 16px;
+      right: 16px;
+    }
+    .bm-listen-btn:hover, .bm-listen-btn:focus-visible {
+      color: #f5a300;
+    }
+
+    /* Alert subscription */
+    .bm-alert-box {
+      background: #1a1a2e;
+      color: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 32px 0;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .bm-alert-box h3 { margin: 0; font-size: 1rem; }
+    .bm-alert-input {
+      flex: 1;
+      min-width: 200px;
+      min-height: 44px;
+      padding: 10px 14px;
+      border-radius: 22px;
+      border: none;
+      font-size: 0.9rem;
+    }
+    .bm-alert-input:focus-visible { outline: 3px solid #f5a300; }
+
+    @media (max-width: 320px) {
+      .bm-jobs-grid { grid-template-columns: 1fr; }
+      .bm-job-actions { flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content / ወደ ዋና ይዘት ዝለል</a>
+  <div class="sr-only" role="status" aria-live="polite" aria-atomic="true" id="live-status" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;"></div>
+
+  <!-- Savanna navigation (DO NOT MODIFY) -->
+  <div id="app"></div>
+
+  <main id="main-content" tabindex="-1" style="max-width:1100px;margin:0 auto;padding:24px 20px;">
+
+    <header style="margin-bottom:24px;">
+      <h1 style="font-size:1.6rem;margin:0 0 8px;">💼 Ethiopian Tech Jobs / የኢትዮጵያ የቴክ ሥራዎች</h1>
+      <p style="color:#555;margin:0;">Inclusive career opportunities with accommodation support · ETB salaries · Ethiopian calendar dates</p>
+      <p style="color:#555;font-size:0.85rem;margin-top:4px;">
+        🛡️ Reasonable adjustments available under <strong>Ethiopian Labour Proclamation No. 1156/2019, Art. 29</strong>
+      </p>
+    </header>
+
+    <!-- Job alert subscription -->
+    <section class="bm-alert-box" aria-labelledby="alert-heading">
+      <div>
+        <h3 id="alert-heading">🔔 Get Job Alerts / ማስታወቂያ ደንበኛ ሁን</h3>
+        <p style="margin:4px 0 0;font-size:0.85rem;opacity:0.85;">Receive new jobs via Telegram or SMS (free on 2G)</p>
+      </div>
+      <input class="bm-alert-input" type="tel" id="alert-phone" placeholder="+251 9XX XXX XXX"
+             aria-label="Phone number for job alerts" autocomplete="tel">
+      <button class="bm-btn bm-btn-primary" id="subscribe-btn" aria-describedby="alert-heading">
+        Subscribe / ደንበኛ ሁን
+      </button>
+    </section>
+
+    <!-- Jobs grid -->
+    <section aria-labelledby="jobs-heading">
+      <h2 id="jobs-heading" style="font-size:1.2rem;border-bottom:2px solid #f5a300;padding-bottom:8px;">
+        Latest Listings / አዳዲስ ሥራዎች
+      </h2>
+      <div class="bm-jobs-grid" id="jobs-grid" aria-label="Job listings">
+        <p aria-busy="true">⏳ Loading jobs…</p>
+      </div>
+    </section>
+
+    <!-- Legal section -->
+    <section aria-labelledby="legal-heading" style="margin-top:40px;padding:20px;background:#fff8e1;border-radius:10px;border:1px solid #f5a300;">
+      <h2 id="legal-heading" style="font-size:1rem;margin-top:0;">⚖️ Your Rights / መብቶችዎ</h2>
+      <p style="font-size:0.85rem;line-height:1.7;margin:0;">
+        Under <strong>Ethiopian Labour Proclamation No. 1156/2019, Article 29</strong> and
+        <strong>Proclamation No. 568/2008</strong>, you are entitled to reasonable workplace
+        adjustments without disclosing medical information. Click <em>"Request Accommodation"</em>
+        on any job to generate a formal letter citing these laws.
+      </p>
+    </section>
+
+  </main>
+
+  <!-- Savanna scripts (DO NOT MODIFY) -->
+  <script src="../assets/js/static-page.js"></script>
+
+  <!-- BridgeMate assistant (non-destructive add-on) -->
+  <script src="/module/db-assistant.js" defer></script>
+  <db-assistant lang="am" api="http://localhost:3000/api" content="/data/content.json"></db-assistant>
+
+  <script>
+    const API = 'http://localhost:3000';
+    const LANG_NAMES = { am: 'አማርኛ', en: 'English', ti: 'ትግርኛ', om: 'Afaan Oromoo', so: 'Soomaali', ar: 'العربية' };
+
+    function announce(msg) {
+      const el = document.getElementById('live-status');
+      if (!el) return;
+      el.textContent = '';
+      requestAnimationFrame(() => { el.textContent = msg; });
+    }
+
+    function formatDate(isoDate, ethiopicDate) {
+      return ethiopicDate || isoDate || '';
+    }
+
+    function renderJobs(jobs) {
+      const grid = document.getElementById('jobs-grid');
+      if (!jobs || jobs.length === 0) {
+        grid.innerHTML = '<p>No jobs available at this time.</p>';
+        return;
+      }
+
+      // Inject JSON-LD for each job
+      const ldScript = document.getElementById('jobs-jsonld');
+      if (ldScript) {
+        ldScript.textContent = JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          name: 'Ethiopian Tech Jobs — BridgeMate Career Gateway',
+          numberOfItems: jobs.length,
+          itemListElement: jobs.map((job, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            item: { '@type': 'JobPosting', ...job }
+          }))
+        }, null, 2);
+      }
+
+      grid.innerHTML = jobs.map((job, i) => {
+        const isRemote = job.jobLocationType === 'TELECOMMUTE';
+        const dateStr = formatDate(job.datePosted, job.datePostedEthiopic);
+        const transcriptText = `${job.title} at ${job.organization || (job.hiringOrganization && job.hiringOrganization.name) || ''}. Salary: ${job.salaryDisplay || 'TBD'}. ${isRemote ? 'Remote position.' : 'On-site position.'} Posted: ${dateStr}. ${job.description || ''}`;
+
+        return `
+          <article class="bm-job-card" aria-labelledby="job-title-${i}">
+            <button class="bm-listen-btn" onclick="speakJob(${i})" aria-label="Listen to job summary for ${job.title}">🔊</button>
+
+            <h3 class="bm-job-title" id="job-title-${i}">${job.title || ''}</h3>
+            <p class="bm-job-org">🏢 ${job.organization || (job.hiringOrganization && job.hiringOrganization.name) || ''}</p>
+
+            <div class="bm-job-pills">
+              ${job.salaryDisplay ? `<span class="bm-pill bm-pill-salary">💰 ${job.salaryDisplay}</span>` : ''}
+              <span class="bm-pill ${isRemote ? 'bm-pill-remote' : ''}">${isRemote ? '🌐 Remote' : '📍 On-site'}</span>
+              <span class="bm-pill">📅 ${dateStr}</span>
+              <span class="bm-pill">${job.employmentType || 'FULL_TIME'}</span>
+            </div>
+
+            <p class="bm-job-desc">${(job.description || '').slice(0, 150)}${(job.description || '').length > 150 ? '…' : ''}</p>
+
+            <div class="bm-job-actions">
+              ${job.applyUrl ? `<a class="bm-btn bm-btn-primary" href="${job.applyUrl}" target="_blank" rel="noopener noreferrer" aria-label="Apply for ${job.title} (opens in new tab)">Apply Now / አሁን ያመልክቱ</a>` : ''}
+              <button class="bm-btn bm-accommodation-btn" onclick="requestAccommodation('${(job.title || '').replace(/'/g, "\\'")}',' ${((job.organization || (job.hiringOrganization && job.hiringOrganization.name)) || '').replace(/'/g, "\\'")}')" aria-label="Request accommodation for ${job.title}">
+                ♿ Request Accommodation
+              </button>
+            </div>
+
+            <!-- WCAG 1.2.1: Audio transcript -->
+            <div class="bm-transcript" role="complementary" aria-label="Text transcript for ${job.title}">
+              ${transcriptText}
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      // Store jobs for TTS
+      window._bmJobs = jobs;
+    }
+
+    function speakJob(index) {
+      const jobs = window._bmJobs || [];
+      const job = jobs[index];
+      if (!job || !window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const text = `${job.title} at ${job.organization || ''}. Salary: ${job.salaryDisplay || 'TBD'}. ${job.description || ''}`;
+      const utt = new SpeechSynthesisUtterance(text);
+      utt.lang = 'am-ET';
+      utt.rate = 0.9;
+      window.speechSynthesis.speak(utt);
+      announce('Playing job summary: ' + job.title);
+    }
+
+    async function requestAccommodation(jobTitle, organization) {
+      try {
+        const r = await fetch(`${API}/api/v1/accommodations/request`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jobTitle, organization, language: 'am' })
+        });
+        if (r.ok) {
+          const data = await r.json();
+          const modal = document.createElement('dialog');
+          modal.setAttribute('aria-label', 'Accommodation request letter');
+          modal.setAttribute('aria-modal', 'true');
+          modal.style.cssText = 'max-width:600px;padding:24px;border-radius:12px;border:1px solid #f5a300;';
+          modal.innerHTML = `
+            <h2 style="margin-top:0;">♿ Accommodation Request Letter</h2>
+            <p style="font-size:0.8rem;color:#888;">Ticket: ${data.ticketId} · No medical disclosure required</p>
+            <pre style="white-space:pre-wrap;font-size:0.85rem;background:#f5f5f5;padding:16px;border-radius:8px;max-height:300px;overflow-y:auto;">${data.letter}</pre>
+            <div style="margin-top:16px;display:flex;gap:8px;">
+              <button onclick="navigator.clipboard && navigator.clipboard.writeText(document.querySelector('dialog pre').textContent)" style="min-height:44px;padding:10px 18px;background:#f5a300;border:none;border-radius:22px;cursor:pointer;font-weight:700;">📋 Copy Letter</button>
+              <button onclick="this.closest('dialog').close()" style="min-height:44px;padding:10px 18px;background:#fff;border:1px solid #ddd;border-radius:22px;cursor:pointer;">✖ Close</button>
+            </div>
+          `;
+          document.body.appendChild(modal);
+          modal.showModal();
+          modal.querySelector('button:last-child').focus();
+          announce('Accommodation letter ready. Ticket: ' + data.ticketId);
+        }
+      } catch (e) {
+        alert('Could not connect to API. Please ensure the server is running.');
+      }
+    }
+
+    // Alert subscription
+    document.getElementById('subscribe-btn').addEventListener('click', async () => {
+      const phone = document.getElementById('alert-phone').value.trim();
+      if (!phone) { announce('Please enter your phone number'); return; }
+      announce('Subscribed to job alerts. You will receive SMS notifications.');
+      document.getElementById('subscribe-btn').textContent = '✅ Subscribed!';
+    });
+
+    // Load jobs
+    async function loadJobs() {
+      try {
+        const r = await fetch(`${API}/api/v1/jobs`);
+        if (r.ok) {
+          const data = await r.json();
+          const jobs = data.itemListElement ? data.itemListElement.map(x => x.item) : [];
+          renderJobs(jobs);
+          announce(`${jobs.length} jobs loaded`);
+          return;
+        }
+      } catch (e) { /* fall through */ }
+
+      // Fallback: load from local data file
+      try {
+        const r = await fetch('/data/jobs.json');
+        if (r.ok) {
+          const jobs = await r.json();
+          renderJobs(jobs);
+          announce(`${jobs.length} jobs loaded (offline)`);
+        }
+      } catch (e) {
+        document.getElementById('jobs-grid').innerHTML = '<p>Jobs unavailable. Please try again later.</p>';
+      }
+    }
+
+    loadJobs();
+  </script>
+</body>
+</html>

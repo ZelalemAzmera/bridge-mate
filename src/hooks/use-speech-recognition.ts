@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export function useSpeechRecognition(onResult?: (transcript: string) => void) {
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
   const [transcript, setTranscript] = useState('');
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     if (
@@ -14,6 +15,17 @@ export function useSpeechRecognition(onResult?: (transcript: string) => void) {
     ) {
       setIsSupported(true);
     }
+  }, []);
+
+  const stopListening = useCallback(() => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {
+        // Recognition already stopped
+      }
+    }
+    setIsListening(false);
   }, []);
 
   const startListening = useCallback(
@@ -27,7 +39,16 @@ export function useSpeechRecognition(onResult?: (transcript: string) => void) {
       if (!SpeechRecognition) return;
 
       try {
+        if (recognitionRef.current) {
+          try {
+            recognitionRef.current.abort();
+          } catch {
+            // Safe abort
+          }
+        }
+
         const recognition = new SpeechRecognition();
+        recognitionRef.current = recognition;
         recognition.continuous = false;
         recognition.interimResults = false;
         recognition.lang = lang;
@@ -51,6 +72,5 @@ export function useSpeechRecognition(onResult?: (transcript: string) => void) {
     [onResult]
   );
 
-  return { isListening, isSupported, transcript, startListening };
+  return { isListening, isSupported, transcript, startListening, stopListening };
 }
-

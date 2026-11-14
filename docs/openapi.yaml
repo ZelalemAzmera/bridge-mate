@@ -1,0 +1,451 @@
+openapi: 3.0.3
+info:
+  title: BridgeMate API
+  description: |
+    BridgeMate Track 3 — Accessible Job & Learning Assistant API for Ethiopian learners.
+    Implements job discovery, accommodation letter generation, Telegram bot webhook,
+    teacher analytics, LTI 1.3 launch, and an AI-powered scrape-and-guide endpoint.
+  version: 1.0.0
+  contact:
+    name: BridgeMate Team
+    url: https://digitalbridge.et
+
+servers:
+  - url: http://localhost:4000
+    description: Local Express development server
+  - url: /
+    description: Next.js App Router (relative)
+
+tags:
+  - name: Jobs
+    description: Ethiopian tech job listings with accessibility metadata
+  - name: Accommodations
+    description: Accommodation letter generation citing Ethiopian law
+  - name: Scrape & Guide
+    description: Multi-engine accessible scraper and job barrier decoder
+  - name: Telegram
+    description: Telegraf bot webhook handler
+  - name: Teacher Insights
+    description: Anonymised learner question analytics
+  - name: LTI
+    description: LTI 1.3 LMS embedding
+  - name: Health
+    description: Service health check
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Service health check
+      operationId: getHealth
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: ok
+                version: 1.0.0
+                timestamp: '2024-11-10T08:00:00.000Z'
+
+  /api/v1/jobs:
+    get:
+      tags: [Jobs]
+      summary: List Ethiopian tech job postings
+      description: Returns 6 curated Ethiopian technology sector job listings with accessibility accommodations, Ethiopian calendar dates, barrier flags, and schema.org JSON-LD objects.
+      operationId: getJobs
+      responses:
+        '200':
+          description: Array of job listings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobListing'
+              example:
+                - id: job-001
+                  title: Full-Stack Web Developer
+                  organization: Kifiya Financial Technology
+                  location: Addis Ababa
+                  salary_etb: 35000
+                  salary_band: 'ETB 25,000–35,000/mo'
+                  date_posted_gregorian: '2024-11-01T08:00:00.000Z'
+                  date_posted_ec: '22 Tikimt 2017 E.C.'
+                  audio_summary_url: /api/v1/jobs/job-001/audio
+                  accommodations_verified:
+                    - Screen reader compatible application portal
+                  description: Build accessible fintech web applications serving underbanked communities across Ethiopia.
+                  apply_url: 'https://kifiya.com/careers/fullstack-dev'
+                  remote: false
+                  barrier_flags: []
+
+  /api/v1/accommodations/request:
+    post:
+      tags: [Accommodations]
+      summary: Generate a reasonable accommodation request letter
+      description: |
+        Generates a formal accommodation request letter citing:
+        - Ethiopian Labour Proclamation No. 1156/2019 (Art. 29)
+        - Proclamation No. 568/2008
+
+        Zero medical disclosure required or included.
+      operationId: requestAccommodation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccommodationRequest'
+            example:
+              accommodation_type: Screen reader compatible interview materials and async text-based communication
+              job_title: Full-Stack Web Developer
+              organization: Kifiya Financial Technology
+              learner_name: Tigist Bekele
+      responses:
+        '200':
+          description: Accommodation letter in plain text and HTML
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccommodationResponse'
+        '400':
+          description: Missing required field
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/scrape-and-guide:
+    post:
+      tags: [Scrape & Guide]
+      summary: Scrape a URL and return an accessible, cited guide
+      description: |
+        Multi-engine scraper (Crawl4AI → Jina Reader → Mozilla Readability).
+        Returns grounded answers from course/legal knowledge base, interactive page guide steps,
+        and decoded job barrier flags. Supports 6 languages (en, am, ti, om, so, ar).
+      operationId: scrapeAndGuide
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScrapeAndGuideRequest'
+            example:
+              url: 'https://savanna.alxafrica.com/courses/python-fullstack/module-3-accessibility'
+              query: What keyboard shortcuts are supported?
+              lang: en
+              simpleMode: false
+      responses:
+        '200':
+          description: Grounded, cited accessible guide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScrapeAndGuideResponse'
+        '500':
+          description: Scrape or processing error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/telegram/webhook:
+    post:
+      tags: [Telegram]
+      summary: Telegraf bot webhook receiver
+      description: |
+        Receives Telegram Update objects. Supported bot commands:
+        - `/ask <question>` — Grounded Q&A
+        - `/scrape <url>` — Scrape and summarise a URL
+        - `/decode <job_text>` — Detect hidden job barriers
+        - `/livehelp` — Human escalation info
+        - `/alerts` — Latest job alerts
+
+        If `TELEGRAM_BOT_TOKEN` is not set, returns sandbox mode response.
+      operationId: telegramWebhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TelegramUpdate'
+      responses:
+        '200':
+          description: Webhook processed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  reply:
+                    type: string
+
+  /api/v1/teacher-insights:
+    get:
+      tags: [Teacher Insights]
+      summary: Anonymised learner question analytics
+      description: Returns the top 10 anonymised question stems from the in-memory question log. Zero PII stored — no IP addresses, user IDs, or names.
+      operationId: getTeacherInsights
+      responses:
+        '200':
+          description: Anonymised question statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherInsightsResponse'
+
+  /api/v1/lti/launch:
+    get:
+      tags: [LTI]
+      summary: LTI 1.3 mock launch page
+      description: Returns an HTML page embedding the BridgeMate assistant as a custom element for LMS integration demos.
+      operationId: ltiLaunch
+      responses:
+        '200':
+          description: LTI launch HTML page
+          content:
+            text/html:
+              schema:
+                type: string
+              example: '<html>...</html>'
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status, version, timestamp]
+      properties:
+        status:
+          type: string
+          example: ok
+        version:
+          type: string
+          example: 1.0.0
+        timestamp:
+          type: string
+          format: date-time
+
+    JobListing:
+      type: object
+      required: [id, title, organization, location, salary_etb, salary_band, date_posted_gregorian, date_posted_ec, audio_summary_url, accommodations_verified, description, apply_url, remote, barrier_flags, schema_org]
+      properties:
+        id:
+          type: string
+          example: job-001
+        title:
+          type: string
+          example: Full-Stack Web Developer
+        organization:
+          type: string
+          example: Kifiya Financial Technology
+        location:
+          type: string
+          example: Addis Ababa
+        salary_etb:
+          type: number
+          example: 35000
+        salary_band:
+          type: string
+          example: 'ETB 25,000–35,000/mo'
+        date_posted_gregorian:
+          type: string
+          format: date-time
+        date_posted_ec:
+          type: string
+          example: '22 Tikimt 2017 E.C.'
+        audio_summary_url:
+          type: string
+          example: /api/v1/jobs/job-001/audio
+        accommodations_verified:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        apply_url:
+          type: string
+          format: uri
+        remote:
+          type: boolean
+        barrier_flags:
+          type: array
+          items:
+            $ref: '#/components/schemas/BarrierFlag'
+        schema_org:
+          type: object
+          description: Full schema.org/JobPosting JSON-LD object
+
+    BarrierFlag:
+      type: object
+      properties:
+        barrier:
+          type: string
+        recommendedAccommodation:
+          type: string
+        legalCitation:
+          type: string
+
+    AccommodationRequest:
+      type: object
+      required: [accommodation_type]
+      properties:
+        accommodation_type:
+          type: string
+          description: The specific accommodation being requested
+          example: Screen reader compatible interview materials
+        job_title:
+          type: string
+          example: Full-Stack Web Developer
+        organization:
+          type: string
+          example: Kifiya Financial Technology
+        learner_name:
+          type: string
+          example: Tigist Bekele
+
+    AccommodationResponse:
+      type: object
+      properties:
+        letter_text:
+          type: string
+          description: Plain-text version of the accommodation letter
+        letter_html:
+          type: string
+          description: HTML version of the accommodation letter
+        citations:
+          type: array
+          items:
+            type: object
+            properties:
+              law:
+                type: string
+              article:
+                type: string
+              summary:
+                type: string
+
+    ScrapeAndGuideRequest:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          description: URL to scrape (optional; if omitted, uses offline course corpus)
+        query:
+          type: string
+          description: User question to answer from scraped content
+        lang:
+          type: string
+          enum: [en, am, ti, om, so, ar]
+          default: en
+          description: Response language
+        simpleMode:
+          type: boolean
+          default: false
+          description: If true, truncates answers to 2 sentences for low-bandwidth contexts
+
+    ScrapeAndGuideResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+        engineUsed:
+          type: string
+          example: mozilla-readability-local
+        lang:
+          type: string
+        dir:
+          type: string
+          enum: [ltr, rtl]
+        headerMessage:
+          type: string
+        guideNotice:
+          type: string
+        privacyGuarantee:
+          type: string
+        pageTitle:
+          type: string
+        sourceUrl:
+          type: string
+        groundedAnswers:
+          type: array
+          items:
+            type: object
+            properties:
+              sectionHeading:
+                type: string
+              explanation:
+                type: string
+              citation:
+                type: object
+                properties:
+                  title:
+                    type: string
+                  section:
+                    type: string
+                  url:
+                    type: string
+        interactivePageGuide:
+          type: array
+          items:
+            type: object
+        jobBarriersDecoded:
+          type: array
+          items:
+            $ref: '#/components/schemas/BarrierFlag'
+
+    TelegramUpdate:
+      type: object
+      description: Standard Telegram Bot API Update object
+      properties:
+        update_id:
+          type: integer
+        message:
+          type: object
+          properties:
+            message_id:
+              type: integer
+            chat:
+              type: object
+              properties:
+                id:
+                  type: integer
+            text:
+              type: string
+
+    TeacherInsightsResponse:
+      type: object
+      properties:
+        total_sessions:
+          type: integer
+        top_questions:
+          type: array
+          items:
+            type: object
+            properties:
+              question_stem:
+                type: string
+              count:
+                type: integer
+              langs_asked:
+                type: array
+                items:
+                  type: string
+        disclaimer:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+        message:
+          type: string
