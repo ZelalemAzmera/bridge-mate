@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 
 /** Shared in-memory question log (module-level, same instance within a Next.js process) */
-export const questionLog = new Map<string, { count: number; langs: Set<string> }>();
+const questionLog = new Map<string, { count: number; langs: Set<string> }>();
 
-export function trackQuestion(query: string, lang = 'en') {
+function trackQuestion(query: string, lang = 'en') {
   const key = String(query).toLowerCase().trim().slice(0, 200);
   if (!key) return;
   if (!questionLog.has(key)) questionLog.set(key, { count: 0, langs: new Set() });
