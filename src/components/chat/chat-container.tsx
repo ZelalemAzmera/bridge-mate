@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import { ChatMessage, type ChatMessageProps } from './chat-message';
 import { ChatInput } from './chat-input';
 import { useAccessibility, type SupportedLanguage } from '@/hooks/use-accessibility';
 import { useLiveAnnouncer } from '@/hooks/use-live-announcer';
-import { Sparkles, HelpCircle, Globe, Cpu, Zap, Check } from 'lucide-react';
+import { Sparkles, HelpCircle, Globe, Cpu, Zap, Check, User, ArrowRight } from 'lucide-react';
 
 export function ChatContainer() {
   const { language, setLanguage } = useAccessibility();
@@ -39,9 +40,21 @@ export function ChatContainer() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [activeModel, setActiveModel] = useState<string>('Llama 3.3 70B (Groq)');
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const userScrolledUpRef = useRef(false);
+
+  useEffect(() => {
+    fetch('/api/auth/session')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.authenticated && data.user) {
+          setCurrentUser(data.user);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const languageOptions = [
     { code: 'en' as SupportedLanguage, label: 'English', model: 'Llama 3.3 70B' },
@@ -256,6 +269,29 @@ export function ChatContainer() {
         role="region"
         aria-label="Conversation messages history"
       >
+        {/* Tailored Profile Banner */}
+        {currentUser && (
+          <div className="flex items-center justify-between px-3.5 py-2 bg-primary/5 rounded-xl border border-primary/20 text-xs text-foreground">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="font-bold text-foreground">
+                {currentUser.fullName}
+              </span>
+              <span className="text-muted-foreground hidden sm:inline">•</span>
+              <span className="text-muted-foreground hidden sm:inline">
+                {currentUser.profile?.disabilityType ? `Focus: ${currentUser.profile.disabilityType}` : 'Tailored Accessibility Active'}
+              </span>
+            </div>
+            <Link
+              href="/onboarding"
+              className="text-primary hover:underline text-[11px] font-bold flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded px-1"
+            >
+              <span>{language === 'am' ? 'መገለጫ አብጅ' : 'Tailor Profile'}</span>
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+        )}
+
         {messages.map((msg) => (
           <ChatMessage key={msg.id} {...msg} />
         ))}

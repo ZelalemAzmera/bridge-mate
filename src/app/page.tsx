@@ -195,9 +195,16 @@ export default function HomePage() {
 
             {/* Primary Action Buttons */}
             <div className="flex flex-wrap items-center justify-center gap-2.5 pt-2">
-              <Link href="/learn">
+              <Link href="/onboarding">
                 <Button size="default" className="gap-2 shadow-sm bg-primary hover:bg-blue-700 text-white font-bold">
-                  <BookOpen className="w-4 h-4" />
+                  <Sparkles className="w-4 h-4 text-amber-300" />
+                  <span>{isAm ? 'መገለጫዎን ያብጁና ይጀምሩ' : 'Start Tailored Onboarding'}</span>
+                </Button>
+              </Link>
+
+              <Link href="/learn">
+                <Button size="default" variant="outline" className="gap-2 border-border font-bold">
+                  <BookOpen className="w-4 h-4 text-primary" />
                   <span>{isAm ? 'ረዳቱን ሞክር' : 'Open AI Assistant'}</span>
                 </Button>
               </Link>

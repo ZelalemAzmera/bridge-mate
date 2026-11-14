@@ -125,4 +125,59 @@ describe('Track 3: Telegram Bot Assistant & Webhook Engine', () => {
     expect(postJson.ok).toBe(true);
     expect(postJson.handled).toBe(true);
   });
+
+  it('handles /start link_<token> to link user account and personalize Telegram session', async () => {
+    const { getRepository } = await import('@/lib/db');
+    const repo = getRepository();
+
+    const user = await repo.users.create({
+      clerkId: 'clerk_test_linking_01',
+      fullName: 'Abebe Bikila',
+      email: 'abebe@test.et',
+      disabilityType: 'visual_blind',
+      primaryGoal: 'learn_digital_skills',
+      preferredLanguage: 'en',
+    });
+
+    const token = await repo.users.createLinkingToken(user.id);
+    expect(token).toMatch(/^link_/);
+
+    const update: TelegramUpdate = {
+      update_id: 3001,
+      message: {
+        message_id: 101,
+        from: { id: 554433, first_name: 'Abebe', username: 'abebe_b' },
+        chat: { id: 554433, type: 'private' },
+        date: Math.floor(Date.now() / 1000),
+        text: `/start ${token}`,
+      },
+    };
+
+    const linkResult = await TelegramService.processUpdate(update);
+    expect(linkResult.handled).toBe(true);
+    expect(linkResult.replyText).toContain('Account Successfully Linked');
+    expect(linkResult.replyText).toContain('Abebe Bikila');
+
+    // Verify user is now linked by chatId
+    const linked = await repo.users.getByTelegramChatId('554433');
+    expect(linked).not.toBeNull();
+    expect(linked?.fullName).toBe('Abebe Bikila');
+
+    // Test greeting as linked user
+    const greetingUpdate: TelegramUpdate = {
+      update_id: 3002,
+      message: {
+        message_id: 102,
+        from: { id: 554433, first_name: 'Abebe' },
+        chat: { id: 554433, type: 'private' },
+        date: Math.floor(Date.now() / 1000),
+        text: 'hi',
+      },
+    };
+
+    const greetingResult = await TelegramService.processUpdate(greetingUpdate);
+    expect(greetingResult.handled).toBe(true);
+    expect(greetingResult.replyText).toContain('Abebe');
+    expect(greetingResult.replyText).toContain('Welcome to BridgeMate');
+  });
 });

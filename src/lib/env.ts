@@ -32,10 +32,11 @@ export const envSchema = z.object({
     .optional()
     .transform((val) => val === true || val === 'true' || val === '1'),
 
-  // AI Providers (Gemini / OpenAI / Synthetic Mock)
+  // AI Providers (Groq / Gemini / OpenAI / Synthetic Mock)
+  GROQ_API_KEY: z.string().optional(),
   GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
-  DEFAULT_AI_PROVIDER: z.enum(['gemini', 'openai', 'mock']).default('mock'),
+  DEFAULT_AI_PROVIDER: z.enum(['gemini', 'openai', 'groq', 'mock']).default('mock'),
   AI_EMBEDDING_MODEL: z.string().default('text-embedding-3-small'),
 
   // Real-Time Support Messaging (Ably)

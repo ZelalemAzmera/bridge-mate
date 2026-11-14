@@ -77,6 +77,17 @@ export const users = pgTable(
         screenReaderOptimized: false,
         reducedMotion: false,
       }),
+    userType: varchar('user_type', { length: 64 })
+      .$type<'pwd' | 'ally' | 'employer' | 'educator'>()
+      .default('pwd'),
+    disabilityType: varchar('disability_type', { length: 64 }),
+    primaryGoal: varchar('primary_goal', { length: 64 }),
+    assistiveTech: jsonb('assistive_tech').$type<string[]>().default([]),
+    onboardingCompleted: boolean('onboarding_completed').default(false).notNull(),
+    telegramChatId: varchar('telegram_chat_id', { length: 64 }),
+    telegramUsername: varchar('telegram_username', { length: 128 }),
+    telegramLinkingToken: varchar('telegram_linking_token', { length: 128 }),
+    telegramLinkingTokenExpiresAt: timestamp('telegram_linking_token_expires_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -86,6 +97,8 @@ export const users = pgTable(
   },
   (table) => ({
     clerkIdIdx: index('users_clerk_id_idx').on(table.clerkId),
+    telegramChatIdIdx: index('users_telegram_chat_id_idx').on(table.telegramChatId),
+    telegramLinkingTokenIdx: index('users_telegram_token_idx').on(table.telegramLinkingToken),
   })
 );
 

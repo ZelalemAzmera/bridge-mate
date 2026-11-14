@@ -5,6 +5,7 @@ import { retrieveRelevantChunks } from '@/lib/ai/rag/retriever';
 import { buildGroundedContext } from '@/lib/ai/rag/context-builder';
 import { buildSystemPrompt } from '@/lib/ai/prompts/system-chat';
 import { getRepository } from '@/lib/db';
+import { getAuthUser } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
@@ -22,14 +23,36 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const userLanguage = body.language || (/[\\u1200-\\u137F]/.test(latestMessage) ? 'am' : 'en');
+    const user = await getAuthUser();
+    const userLanguage = body.language || user?.preferredLanguage || (/[\\u1200-\\u137F]/.test(latestMessage) ? 'am' : 'en');
 
-    // 1. RAG Retrieval from verified knowledge base
-    const { chunks } = await retrieveRelevantChunks(latestMessage);
-    const { promptContext, citations } = buildGroundedContext(chunks);
+    const trimmed = latestMessage.trim().toLowerCase();
+    const isGreeting =
+      /^(hi|hello|hey|greetings|good\s*(morning|afternoon|evening)|howdy)\b/i.test(trimmed) ||
+      /^(ሰላም|ጤና ይስጥልኝ|እንደምን አለህ|እንደምን አለሽ|ሃይ)\b/.test(trimmed);
 
-    // 2. Build system instructions with grounded context and user language
-    const systemInstruction = buildSystemPrompt(promptContext, userLanguage);
+    const userProfile = user ? {
+      fullName: user.fullName,
+      userType: user.profile?.userType,
+      disabilityType: user.profile?.disabilityType,
+      primaryGoal: user.profile?.primaryGoal,
+      assistiveTech: user.profile?.assistiveTech,
+      preferredLanguage: userLanguage,
+    } : undefined;
+
+    let citations: any[] = [];
+    let promptContext = '';
+
+    // Only perform RAG chunk retrieval when the user is asking an actual question
+    if (!isGreeting) {
+      const { chunks } = await retrieveRelevantChunks(latestMessage);
+      const grounded = buildGroundedContext(chunks);
+      promptContext = grounded.promptContext;
+      citations = grounded.citations;
+    }
+
+    // 2. Build system instructions with grounded context, user language, and tailored profile
+    const systemInstruction = buildSystemPrompt(promptContext, userLanguage, userProfile);
 
     // 3. Save user message to database
     const repo = getRepository();
@@ -77,22 +100,21 @@ export async function POST(req: NextRequest) {
 
     // 5. Offline Resilient Mock Streaming Response
     const isAmharic = userLanguage === 'am' || /[\u1200-\u137F]/.test(latestMessage);
-    const trimmed = latestMessage.trim().toLowerCase();
-    const isGreeting = /^(hi|hello|hey|greetings|good\s*(morning|afternoon|evening)|howdy)\b/i.test(trimmed) ||
-                       /^(ሰላም|ጤና ይስጥልኝ|እንደምን አለህ|እንደምን አለሽ|ሃይ)\b/.test(trimmed);
-
     let mockResponse = '';
 
     if (isGreeting) {
+      const nameStr = user?.fullName ? (isAmharic ? `${user.fullName} ` : ` ${user.fullName}`) : '';
       if (isAmharic) {
-        mockResponse = `ሰላም! 👋 ወደ ብሪጅሜት እንኳን በደህና መጡ።\n\n` +
+        mockResponse = `ሰላም ${nameStr}! 👋 ወደ ብሪጅሜት እንኳን በደህና መጡ።\n\n` +
+          (user?.profile?.disabilityType ? `ለእርስዎ የተዘጋጀው የተደራሽነት መገለጫ (${user.profile.disabilityType}) ነቅቷል።\n\n` : '') +
           `እኔ ብሪጅሜት ነኝ — የቴክኖሎጂ ትምህርቶችን፣ በአዋጅ 1156/2019 የተደገፉ የተደራሽነት መብቶችን እና አካታች የሥራ ዕድሎችን እንዲረዱ ለማገዝ ዝግጁ ነኝ።\n\n` +
           `ዛሬ በምን ላግዝዎት?\n` +
           `• ስለ ኮርሶች ወይም ስለ ፈተና ማመቻቸት መጠየቅ\n` +
           `• የሥራ ማስታወቂያ ማነቆዎችን መመርመር\n` +
           `• የቀጥታ የሰው ድጋፍ ማግኘት (Alt+H)`;
       } else {
-        mockResponse = `Hello! 👋 Welcome to BridgeMate.\n\n` +
+        mockResponse = `Hello${nameStr}! 👋 Welcome to BridgeMate.\n\n` +
+          (user?.profile?.disabilityType ? `Your tailored accessibility profile (${user.profile.disabilityType}) is active.\n\n` : '') +
           `I am your accessible guide for ALX tech courses, disability accommodation rights under Ethiopian Proclamation 1156/2019, and inclusive career opportunities.\n\n` +
           `How can I assist you today? You can ask me:\n` +
           `• Prerequisites and accommodations for ALX courses (Python, AWS, Front-End)\n` +

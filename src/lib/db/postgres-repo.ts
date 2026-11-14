@@ -39,6 +39,28 @@ export class PostgresDatabaseRepository implements IDatabaseRepository {
       return rows[0] ?? null;
     },
 
+    getByTelegramChatId: async (chatId: string): Promise<schema.User | null> => {
+      const rows = await this.db
+        .select()
+        .from(schema.users)
+        .where(eq(schema.users.telegramChatId, chatId))
+        .limit(1);
+      return rows[0] ?? null;
+    },
+
+    getByLinkingToken: async (token: string): Promise<schema.User | null> => {
+      const rows = await this.db
+        .select()
+        .from(schema.users)
+        .where(eq(schema.users.telegramLinkingToken, token))
+        .limit(1);
+      const user = rows[0] ?? null;
+      if (user && user.telegramLinkingTokenExpiresAt && new Date(user.telegramLinkingTokenExpiresAt) < new Date()) {
+        return null; // Expired
+      }
+      return user;
+    },
+
     create: async (data: Partial<schema.NewUser> & { clerkId: string }): Promise<schema.User> => {
       const [user] = await this.db
         .insert(schema.users)
@@ -63,6 +85,79 @@ export class PostgresDatabaseRepository implements IDatabaseRepository {
         throw new Error(`User not found: ${userId}`);
       }
       return updated;
+    },
+
+    updateProfile: async (
+      userId: string,
+      data: any
+    ): Promise<schema.User> => {
+      const [updated] = await this.db
+        .update(schema.users)
+        .set({
+          ...(data.fullName !== undefined ? { fullName: data.fullName } : {}),
+          ...(data.email !== undefined ? { email: data.email } : {}),
+          ...(data.preferredLanguage !== undefined ? { preferredLanguage: data.preferredLanguage } : {}),
+          ...(data.userType !== undefined ? { userType: data.userType } : {}),
+          ...(data.disabilityType !== undefined ? { disabilityType: data.disabilityType } : {}),
+          ...(data.primaryGoal !== undefined ? { primaryGoal: data.primaryGoal } : {}),
+          ...(data.assistiveTech !== undefined ? { assistiveTech: data.assistiveTech } : {}),
+          ...(data.onboardingCompleted !== undefined ? { onboardingCompleted: data.onboardingCompleted } : {}),
+          ...(data.accessibilityPreferences !== undefined ? { accessibilityPreferences: data.accessibilityPreferences } : {}),
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.users.id, userId))
+        .returning();
+      if (!updated) {
+        throw new Error(`User not found: ${userId}`);
+      }
+      return updated;
+    },
+
+    createLinkingToken: async (userId: string): Promise<string> => {
+      const token = `link_${Math.random().toString(36).substring(2, 8)}${Date.now().toString(36)}`;
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const [updated] = await this.db
+        .update(schema.users)
+        .set({
+          telegramLinkingToken: token,
+          telegramLinkingTokenExpiresAt: expiresAt,
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.users.id, userId))
+        .returning();
+      if (!updated) {
+        throw new Error(`User not found: ${userId}`);
+      }
+      return token;
+    },
+
+    linkTelegramAccount: async (
+      token: string,
+      chatId: string,
+      username?: string
+    ): Promise<schema.User | null> => {
+      const rows = await this.db
+        .select()
+        .from(schema.users)
+        .where(eq(schema.users.telegramLinkingToken, token))
+        .limit(1);
+      const user = rows[0] ?? null;
+      if (!user) return null;
+      if (user.telegramLinkingTokenExpiresAt && new Date(user.telegramLinkingTokenExpiresAt) < new Date()) {
+        return null;
+      }
+      const [updated] = await this.db
+        .update(schema.users)
+        .set({
+          telegramChatId: chatId,
+          telegramUsername: username ?? null,
+          telegramLinkingToken: null,
+          telegramLinkingTokenExpiresAt: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.users.id, user.id))
+        .returning();
+      return updated ?? null;
     },
   };
 

@@ -35,7 +35,37 @@ export default function TelegramSimulatorPage() {
   const [inputText, setInputText] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [deepLink, setDeepLink] = useState('');
+  const [isLinking, setIsLinking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetch('/api/auth/session')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.authenticated && data.user) {
+          setCurrentUser(data.user);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleConnectTelegram = async () => {
+    setIsLinking(true);
+    try {
+      const res = await fetch('/api/telegram/link-token');
+      const data = await res.json();
+      if (data.success && data.deepLink) {
+        setDeepLink(data.deepLink);
+        window.open(data.deepLink, '_blank');
+      }
+    } catch (err) {
+      console.error('Failed to generate telegram link token:', err);
+    } finally {
+      setIsLinking(false);
+    }
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -150,6 +180,15 @@ export default function TelegramSimulatorPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={handleConnectTelegram}
+              disabled={isLinking}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs transition-all shadow-md active:scale-95 cursor-pointer disabled:opacity-50"
+            >
+              <Bot className="w-4 h-4" />
+              <span>{isLinking ? 'Connecting...' : 'Connect to Live Telegram Bot'}</span>
+            </button>
+
             <button
               onClick={copyWebhookUrl}
               className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-medium text-xs transition-all focus:outline-none focus:ring-2 focus:ring-sky-400"

@@ -122,6 +122,25 @@ export class MemoryDatabaseRepository implements IDatabaseRepository {
       return this.usersStore.get(id) ?? null;
     },
 
+    getByTelegramChatId: async (chatId: string): Promise<User | null> => {
+      for (const u of this.usersStore.values()) {
+        if (u.telegramChatId === chatId) return u;
+      }
+      return null;
+    },
+
+    getByLinkingToken: async (token: string): Promise<User | null> => {
+      for (const u of this.usersStore.values()) {
+        if (u.telegramLinkingToken === token) {
+          if (u.telegramLinkingTokenExpiresAt && new Date(u.telegramLinkingTokenExpiresAt) < new Date()) {
+            return null; // Expired
+          }
+          return u;
+        }
+      }
+      return null;
+    },
+
     create: async (data: Partial<NewUser> & { clerkId: string }): Promise<User> => {
       const id = data.id ?? crypto.randomUUID();
       const now = new Date();
@@ -132,6 +151,15 @@ export class MemoryDatabaseRepository implements IDatabaseRepository {
         email: data.email ?? null,
         phoneNumber: data.phoneNumber ?? null,
         preferredLanguage: data.preferredLanguage ?? 'am',
+        userType: data.userType ?? 'pwd',
+        disabilityType: data.disabilityType ?? null,
+        primaryGoal: data.primaryGoal ?? null,
+        assistiveTech: data.assistiveTech ?? [],
+        onboardingCompleted: data.onboardingCompleted ?? false,
+        telegramChatId: data.telegramChatId ?? null,
+        telegramUsername: data.telegramUsername ?? null,
+        telegramLinkingToken: data.telegramLinkingToken ?? null,
+        telegramLinkingTokenExpiresAt: data.telegramLinkingTokenExpiresAt ?? null,
         accessibilityPreferences: data.accessibilityPreferences ?? {
           highContrast: false,
           fontSizeScale: 1.0,
@@ -166,6 +194,70 @@ export class MemoryDatabaseRepository implements IDatabaseRepository {
       };
       this.usersStore.set(userId, updated);
       return updated;
+    },
+
+    updateProfile: async (
+      userId: string,
+      data: any
+    ): Promise<User> => {
+      const existing = this.usersStore.get(userId);
+      if (!existing) {
+        throw new Error(`User not found: ${userId}`);
+      }
+      const updated: User = {
+        ...existing,
+        fullName: data.fullName ?? existing.fullName,
+        email: data.email ?? existing.email,
+        preferredLanguage: data.preferredLanguage ?? existing.preferredLanguage,
+        userType: data.userType ?? existing.userType,
+        disabilityType: data.disabilityType ?? existing.disabilityType,
+        primaryGoal: data.primaryGoal ?? existing.primaryGoal,
+        assistiveTech: data.assistiveTech ?? existing.assistiveTech,
+        onboardingCompleted: data.onboardingCompleted ?? existing.onboardingCompleted,
+        accessibilityPreferences: {
+          ...existing.accessibilityPreferences,
+          ...(data.accessibilityPreferences ?? {}),
+        },
+        updatedAt: new Date(),
+      };
+      this.usersStore.set(userId, updated);
+      return updated;
+    },
+
+    createLinkingToken: async (userId: string): Promise<string> => {
+      const existing = this.usersStore.get(userId);
+      if (!existing) {
+        throw new Error(`User not found: ${userId}`);
+      }
+      const token = `link_${Math.random().toString(36).substring(2, 8)}${Date.now().toString(36)}`;
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+      existing.telegramLinkingToken = token;
+      existing.telegramLinkingTokenExpiresAt = expiresAt;
+      existing.updatedAt = new Date();
+      this.usersStore.set(userId, existing);
+      return token;
+    },
+
+    linkTelegramAccount: async (
+      token: string,
+      chatId: string,
+      username?: string
+    ): Promise<User | null> => {
+      for (const u of this.usersStore.values()) {
+        if (u.telegramLinkingToken === token) {
+          if (u.telegramLinkingTokenExpiresAt && new Date(u.telegramLinkingTokenExpiresAt) < new Date()) {
+            return null; // Expired
+          }
+          u.telegramChatId = chatId;
+          u.telegramUsername = username ?? null;
+          u.telegramLinkingToken = null;
+          u.telegramLinkingTokenExpiresAt = null;
+          u.updatedAt = new Date();
+          this.usersStore.set(u.id, u);
+          return u;
+        }
+      }
+      return null;
     },
   };
 

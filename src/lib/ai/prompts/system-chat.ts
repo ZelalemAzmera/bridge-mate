@@ -22,6 +22,12 @@ Your goal is to guide users through digital literacy, technology careers, educat
 
 4. ETHIOPIAN CONTEXT:
    - Be aware of Ethiopian realities: low-bandwidth connections, regional languages, TVET systems, and Proclamation 568/2008 & Proclamation 1156/2019.
+
+5. CONVERSATIONAL GREETINGS & INTRODUCTIONS:
+   - If the user sends a greeting (e.g., "hi", "hello", "hey", "ሰላም", "ጤና ይስጥልኝ", "good morning") or asks an introductory question, do NOT dump legal proclamation citations or pretend to answer a legal case study.
+   - Greet the user warmly by name (if provided in their profile).
+   - Empoweringly acknowledge their tailored learning track or functional accessibility context.
+   - Proactively offer relevant next steps: exploring courses, decoding job notices (/decode), drafting accommodation requests, or speaking to a live specialist (/livehelp).
 </operational_rules>
 
 <retrieved_context>
@@ -29,9 +35,52 @@ Your goal is to guide users through digital literacy, technology careers, educat
 </retrieved_context>
 `;
 
-export function buildSystemPrompt(contextText: string, language: string = 'en'): string {
+export interface SystemPromptProfile {
+  fullName?: string;
+  userType?: string;
+  disabilityType?: string;
+  primaryGoal?: string;
+  assistiveTech?: string[];
+  preferredLanguage?: string;
+}
+
+export function buildSystemPrompt(
+  contextText: string,
+  language: string = 'en',
+  profile?: SystemPromptProfile
+): string {
   let prompt = SYSTEM_CHAT_PROMPT.replace('{{RETRIEVED_CONTEXT}}', contextText || 'No external documents retrieved.');
   
+  if (profile && (profile.fullName || profile.disabilityType || profile.primaryGoal)) {
+    const disabilityLabels: Record<string, string> = {
+      visual_blind: 'Blind / Screen Reader User (NVDA / JAWS / TalkBack)',
+      visual_low: 'Low Vision (Magnification & High Contrast)',
+      hearing_deaf: 'Deaf (EthSL Ethiopian Sign Language & Visual Transcripts)',
+      hearing_hard_of_hearing: 'Hard of Hearing (Audio Captions & Text-First)',
+      mobility_physical: 'Physical / Mobility Impairment (Keyboard Only / Motor Assist)',
+      neurodivergent_cognitive: 'Neurodivergent / Cognitive (Dyslexia / Plain Language / Low Distraction)',
+      speech_communication: 'Speech & Communication (Text-Based Communication)',
+      none: 'General Learner / Ally',
+    };
+
+    const goalLabels: Record<string, string> = {
+      learn_digital_skills: 'Digital Skills & Tech Career Mastery (Coding, ALX, AWS)',
+      find_accessible_jobs: 'Inclusive Employment Search & Job Listing Decoding',
+      request_accommodations: 'Legal Accommodation Drafting (Proclamation 568/2008 & 1156/2019)',
+      connect_human_help: 'Direct Human Specialist Navigation',
+    };
+
+    prompt += `\n\n<active_user_profile>
+Learner Name: ${profile.fullName || 'BridgeMate Learner'}
+User Category: ${profile.userType || 'Person with Disability'}
+Functional Accessibility Focus: ${disabilityLabels[profile.disabilityType || ''] || profile.disabilityType || 'General Accessible Support'}
+Primary Goal: ${goalLabels[profile.primaryGoal || ''] || profile.primaryGoal || 'Accessible Learning'}
+Assistive Technologies: ${(profile.assistiveTech && profile.assistiveTech.length > 0) ? profile.assistiveTech.join(', ') : 'Standard Accessible Web'}
+Preferred Language: ${language}
+</active_user_profile>
+`;
+  }
+
   if (language === 'am') {
     prompt += `\n\nCRITICAL USER SETTING: The user has explicitly selected Amharic (አማርኛ). You must reply in fluent, polite Amharic using proper Ge'ez script.\n`;
   } else if (language === 'om') {

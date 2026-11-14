@@ -36,6 +36,18 @@ export type AccessibilityPreferences = {
   reducedMotion?: boolean;
 };
 
+export type OnboardingData = {
+  fullName?: string;
+  email?: string;
+  preferredLanguage?: string;
+  userType?: 'pwd' | 'ally' | 'employer' | 'educator';
+  disabilityType?: string;
+  primaryGoal?: string;
+  assistiveTech?: string[];
+  accessibilityPreferences?: AccessibilityPreferences;
+  onboardingCompleted?: boolean;
+};
+
 export type KnowledgeChunkWithSource = KnowledgeChunk & {
   chunk: KnowledgeChunk;
   source: KnowledgeSource;
@@ -56,11 +68,23 @@ export interface IDatabaseRepository {
   users: {
     getByClerkId(clerkId: string): Promise<User | null>;
     getById(id: string): Promise<User | null>;
+    getByTelegramChatId(chatId: string): Promise<User | null>;
+    getByLinkingToken(token: string): Promise<User | null>;
     create(data: Partial<NewUser> & { clerkId: string }): Promise<User>;
     updatePreferences(
       userId: string,
       prefs: AccessibilityPreferences
     ): Promise<User>;
+    updateProfile(
+      userId: string,
+      data: Partial<OnboardingData>
+    ): Promise<User>;
+    createLinkingToken(userId: string): Promise<string>;
+    linkTelegramAccount(
+      token: string,
+      chatId: string,
+      username?: string
+    ): Promise<User | null>;
   };
   knowledge: {
     findSimilarChunks(

@@ -41,13 +41,34 @@ function handleMockAuth(req: NextRequest): NextResponse {
     return NextResponse.redirect(signInUrl);
   }
 
-  // Inject mock user headers downstream to Server Components & Route Handlers
+  // Inject mock or session user headers downstream to Server Components & Route Handlers
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set('x-bridgemate-mock-auth', 'true');
-  requestHeaders.set('x-bridgemate-user-id', 'user_mock_selamawit_01');
-  requestHeaders.set('x-bridgemate-user-name', 'Selamawit Tadesse');
-  requestHeaders.set('x-bridgemate-user-email', 'selamawit@example.com');
-  requestHeaders.set('x-bridgemate-user-lang', 'am');
+
+  const sessionCookie = req.cookies.get('bridgemate_session_user')?.value;
+  if (sessionCookie) {
+    try {
+      const parsed = JSON.parse(decodeURIComponent(sessionCookie));
+      requestHeaders.set('x-bridgemate-user-id', parsed.userId || 'user_custom_01');
+      requestHeaders.set('x-bridgemate-user-name', parsed.fullName || 'BridgeMate Learner');
+      requestHeaders.set('x-bridgemate-user-email', parsed.email || 'learner@bridgemate.et');
+      requestHeaders.set('x-bridgemate-user-lang', parsed.preferredLanguage || 'en');
+      requestHeaders.set('x-bridgemate-user-disability', parsed.profile?.disabilityType || parsed.disabilityType || 'visual_blind');
+      requestHeaders.set('x-bridgemate-user-goal', parsed.profile?.primaryGoal || parsed.primaryGoal || 'learn_digital_skills');
+      requestHeaders.set('x-bridgemate-user-pwd', parsed.profile?.isPersonWithDisability === false ? 'false' : 'true');
+    } catch {
+      // Fallback to default
+      requestHeaders.set('x-bridgemate-user-id', 'user_mock_selamawit_01');
+      requestHeaders.set('x-bridgemate-user-name', 'Selamawit Tadesse');
+      requestHeaders.set('x-bridgemate-user-email', 'selamawit@example.com');
+      requestHeaders.set('x-bridgemate-user-lang', 'am');
+    }
+  } else {
+    requestHeaders.set('x-bridgemate-user-id', 'user_mock_selamawit_01');
+    requestHeaders.set('x-bridgemate-user-name', 'Selamawit Tadesse');
+    requestHeaders.set('x-bridgemate-user-email', 'selamawit@example.com');
+    requestHeaders.set('x-bridgemate-user-lang', 'am');
+  }
 
   return NextResponse.next({
     request: {
