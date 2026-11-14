@@ -54,10 +54,20 @@ export const envSchema = z.object({
   // Storage (Vercel Blob)
   BLOB_READ_WRITE_TOKEN: z.string().optional(),
 
-  // Notifications (SMS)
-  SMS_PROVIDER: z.enum(['send.et', 'africas_talking', 'mock']).default('mock'),
+  // Notifications (SMS Gateways: Send.et, Africa's Talking, Twilio, Mock)
+  SMS_PROVIDER: z
+    .enum(['send.et', 'sendet', 'send_et', 'africas_talking', 'africastalking', 'twilio', 'mock', 'sandbox'])
+    .default('mock'),
   SMS_API_KEY: z.string().optional(),
   SMS_SENDER_ID: z.string().default('BridgeMate'),
+  SENDET_API_KEY: z.string().optional(),
+  SEND_ET_API_KEY: z.string().optional(),
+  SEND_ET_SENDER_ID: z.string().optional(),
+  AFRICASTALKING_USERNAME: z.string().optional(),
+  AFRICASTALKING_API_KEY: z.string().optional(),
+  TWILIO_ACCOUNT_SID: z.string().optional(),
+  TWILIO_AUTH_TOKEN: z.string().optional(),
+  TWILIO_PHONE_NUMBER: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -9,7 +9,7 @@ import { TelegramService } from '@/lib/telegram/telegram.service';
 export interface SendResult {
   success: boolean;
   messageId: string;
-  provider: 'sendet' | 'telegram' | 'sandbox';
+  provider: 'sendet' | 'africastalking' | 'twilio' | 'telegram' | 'sandbox';
   recipient: string;
   deliveredAt: string;
 }
@@ -39,42 +39,121 @@ export class NotificationService {
 
     // Channel: SMS
     const formattedRecipient = normalizeEthiopianPhone(recipient);
-    const provider = process.env.SMS_PROVIDER === 'sendet' ? 'sendet' : 'sandbox';
+    const rawProvider = (process.env.SMS_PROVIDER || 'mock').toLowerCase().trim();
 
-    if (provider === 'sendet' && process.env.SENDET_API_KEY) {
+    // 1. Send.et (Ethiopian SMS Gateway for Ethio Telecom & Safaricom)
+    const isSendEt = rawProvider === 'sendet' || rawProvider === 'send.et' || rawProvider === 'send_et';
+    const sendEtApiKey = process.env.SENDET_API_KEY || process.env.SEND_ET_API_KEY || process.env.SMS_API_KEY;
+    const sendEtSenderId = process.env.SENDET_SENDER_ID || process.env.SEND_ET_SENDER_ID || process.env.SMS_SENDER_ID || 'BridgeMate';
+
+    if (isSendEt && sendEtApiKey && !sendEtApiKey.includes('sample')) {
       try {
         const res = await fetch('https://api.send.et/v1/sms/send', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${process.env.SENDET_API_KEY}`,
+            Authorization: `Bearer ${sendEtApiKey}`,
           },
           body: JSON.stringify({
             to: formattedRecipient,
             message,
-            sender_id: 'BridgeMate',
+            sender_id: sendEtSenderId,
           }),
         });
 
-        if (!res.ok) {
-          throw new Error(`Send.et API error: ${res.statusText}`);
+        if (res.ok) {
+          return {
+            success: true,
+            messageId,
+            provider: 'sendet',
+            recipient: formattedRecipient,
+            deliveredAt: new Date().toISOString(),
+          };
+        }
+      } catch (err) {
+        console.warn('[NotificationService] Send.et live dispatch failed, using sandbox fallback:', err);
+      }
+    }
+
+    // 2. Africa's Talking (Regional Africa Gateway)
+    const isAfricasTalking = rawProvider === 'africastalking' || rawProvider === 'africas_talking';
+    const atUsername = process.env.AFRICASTALKING_USERNAME;
+    const atApiKey = process.env.AFRICASTALKING_API_KEY || process.env.SMS_API_KEY;
+
+    if (isAfricasTalking && atUsername && atApiKey && !atApiKey.includes('sample')) {
+      try {
+        const params = new URLSearchParams();
+        params.append('username', atUsername);
+        params.append('to', formattedRecipient);
+        params.append('message', message);
+        if (process.env.AFRICASTALKING_FROM) {
+          params.append('from', process.env.AFRICASTALKING_FROM);
         }
 
-        return {
-          success: true,
-          messageId,
-          provider: 'sendet',
-          recipient: formattedRecipient,
-          deliveredAt: new Date().toISOString(),
-        };
+        const res = await fetch('https://api.africastalking.com/version1/messaging', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            apiKey: atApiKey,
+            Accept: 'application/json',
+          },
+          body: params.toString(),
+        });
+
+        if (res.ok) {
+          return {
+            success: true,
+            messageId,
+            provider: 'africastalking',
+            recipient: formattedRecipient,
+            deliveredAt: new Date().toISOString(),
+          };
+        }
       } catch (err) {
-        console.warn('[NotificationService] Send.et live delivery failed, falling back to sandbox log:', err);
+        console.warn('[NotificationService] Africa\'s Talking dispatch failed, using sandbox fallback:', err);
+      }
+    }
+
+    // 3. Twilio (Global Gateway)
+    const isTwilio = rawProvider === 'twilio';
+    const twilioSid = process.env.TWILIO_ACCOUNT_SID;
+    const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN;
+    const twilioFrom = process.env.TWILIO_PHONE_NUMBER;
+
+    if (isTwilio && twilioSid && twilioAuthToken && twilioFrom) {
+      try {
+        const params = new URLSearchParams();
+        params.append('To', formattedRecipient);
+        params.append('From', twilioFrom);
+        params.append('Body', message);
+
+        const authHeader = 'Basic ' + Buffer.from(`${twilioSid}:${twilioAuthToken}`).toString('base64');
+        const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            Authorization: authHeader,
+          },
+          body: params.toString(),
+        });
+
+        if (res.ok) {
+          return {
+            success: true,
+            messageId,
+            provider: 'twilio',
+            recipient: formattedRecipient,
+            deliveredAt: new Date().toISOString(),
+          };
+        }
+      } catch (err) {
+        console.warn('[NotificationService] Twilio dispatch failed, using sandbox fallback:', err);
       }
     }
 
     // Sandbox / Development mock mode
     console.log(
-      `[BridgeMate Notification Dispatcher] Delivered SMS via ${provider} to ${formattedRecipient}: "${message}"`
+      `[BridgeMate Notification Dispatcher] Delivered SMS via sandbox to ${formattedRecipient}: "${message}"`
     );
 
     return {
