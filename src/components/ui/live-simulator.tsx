@@ -52,21 +52,21 @@ export function LiveSimulator() {
   ];
 
   return (
-    <div className="w-full max-w-4xl mx-auto rounded-2xl border border-border bg-card text-card-foreground shadow-lg overflow-hidden transition-all duration-200">
+    <div className="w-full max-w-4xl mx-auto rounded-md border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm overflow-hidden transition-all duration-200">
       {/* Top Window Chrome / Bar */}
-      <div className="px-4 py-3 bg-slate-900 text-slate-100 flex items-center justify-between border-b border-slate-800">
+      <div className="px-4 py-3 bg-[var(--brand-primary)] text-[var(--brand-neutral)] flex items-center justify-between border-b border-[#25433D]">
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-red-500/80 inline-block" />
-            <span className="w-3 h-3 rounded-full bg-amber-500/80 inline-block" />
-            <span className="w-3 h-3 rounded-full bg-emerald-500/80 inline-block" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--brand-accent)] inline-block" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--brand-secondary)] inline-block" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--brand-neutral)] inline-block" />
           </div>
-          <span className="text-xs font-mono text-slate-400 pl-2 border-l border-slate-700">
+          <span className="text-xs font-mono text-[var(--brand-secondary)] pl-2 border-l border-[#2E524A]">
             bridgemate-runtime-v2.et
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/60">
+          <span className="flex items-center gap-1.5 text-xs text-[var(--brand-accent)] bg-[#0C1B18] px-2 py-0.5 rounded-sm border border-[#23453F]">
             <Radio className="w-3 h-3 animate-pulse" />
             <span>WCAG 2.2 AA Verified</span>
           </span>
@@ -74,7 +74,7 @@ export function LiveSimulator() {
       </div>
 
       {/* Mode Navigation Tabs */}
-      <div className="grid grid-cols-3 bg-muted/60 border-b border-border p-1.5 gap-1.5">
+      <div className="grid grid-cols-3 bg-[var(--bg-subtle)] border-b border-[var(--border-default)] p-1.5 gap-1.5">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -82,18 +82,18 @@ export function LiveSimulator() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`relative flex flex-col md:flex-row items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs md:text-sm font-semibold transition-all duration-150 cursor-pointer ${
+              className={`relative flex flex-col md:flex-row items-center justify-center gap-2 px-3 py-2.5 rounded-sm text-xs md:text-sm font-semibold transition-all duration-150 cursor-pointer ${
                 isActive
-                  ? 'bg-card text-foreground shadow-xs border border-border'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-card/50'
+                  ? 'bg-[var(--brand-primary)] text-[var(--brand-neutral)] shadow-xs font-bold'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--brand-secondary)]/30'
               }`}
               role="tab"
               aria-selected={isActive}
             >
-              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[var(--brand-accent)]' : 'text-[var(--text-secondary)]'}`} />
               <div className="text-center md:text-left truncate">
                 <div className="font-bold truncate">{tab.labelAm}</div>
-                <div className="text-[10px] text-muted-foreground hidden sm:block truncate">{tab.labelEn}</div>
+                <div className="text-[10px] opacity-80 hidden sm:block truncate">{tab.labelEn}</div>
               </div>
             </button>
           );
@@ -113,12 +113,12 @@ export function LiveSimulator() {
               className="space-y-4"
             >
               {/* Context Pill */}
-              <div className="flex items-center justify-between text-xs text-muted-foreground pb-2 border-b border-border">
+              <div className="flex items-center justify-between text-xs text-[var(--text-secondary)] pb-2 border-b border-[var(--border-default)]">
                 <span className="flex items-center gap-1 font-mono">
-                  <BookOpen className="w-3.5 h-3.5 text-primary" />
+                  <BookOpen className="w-3.5 h-3.5 text-[var(--brand-primary)]" />
                   Course: ALX Full-Stack Python • Module 3 (Accessibility)
                 </span>
-                <span className="bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 px-2 py-0.5 rounded font-mono text-[11px]">
+                <span className="bg-[var(--brand-secondary)] text-[var(--brand-primary)] px-2 py-0.5 rounded-sm font-mono text-[11px] font-bold border border-[#C5D5C4]">
                   RAG Citation Active
                 </span>
               </div>
@@ -126,44 +126,44 @@ export function LiveSimulator() {
               {/* Chat Exchange */}
               <div className="space-y-3">
                 <div className="flex justify-end">
-                  <div className="bg-primary text-primary-foreground max-w-[85%] rounded-2xl rounded-tr-xs px-4 py-2.5 text-sm shadow-xs">
+                  <div className="bg-[var(--brand-primary)] text-[var(--brand-neutral)] max-w-[85%] rounded-md px-4 py-2.5 text-sm shadow-xs">
                     <p className="font-medium font-ethiopic">
                       በኢትዮጵያ ሕግ መሠረት የአካል ጉዳተኛ ተማሪ የፈተና ጊዜ ማራዘሚያ መጠየቅ መብቱ ነው?
                     </p>
-                    <span className="text-[10px] opacity-80 block text-right mt-1">10:42 AM</span>
+                    <span className="text-[10px] text-[var(--brand-secondary)] block text-right mt-1">10:42 AM</span>
                   </div>
                 </div>
 
                 <div className="flex justify-start items-start gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 text-primary flex items-center justify-center shrink-0 border border-blue-200 font-bold text-xs">
+                  <div className="w-8 h-8 rounded-sm bg-[var(--brand-secondary)] text-[var(--brand-primary)] flex items-center justify-center shrink-0 border border-[#C5D5C4] font-bold text-xs">
                     BM
                   </div>
-                  <div className="bg-muted max-w-[88%] rounded-2xl rounded-tl-xs p-4 text-sm border border-border shadow-xs space-y-2">
+                  <div className="bg-[var(--bg-canvas)] max-w-[88%] rounded-md p-4 text-sm border border-[var(--border-default)] shadow-xs space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-primary flex items-center gap-1">
-                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="text-xs font-bold text-[var(--brand-primary)] flex items-center gap-1">
+                        <ShieldCheck className="w-3.5 h-3.5 text-[var(--brand-accent)]" />
                         የተረጋገጠ የሥርዓተ-ትምህርትና የሕግ ምላሽ
                       </span>
                       <button
                         onClick={() => setIsPlayingAudio(!isPlayingAudio)}
-                        className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 bg-card px-2 py-1 rounded border border-border cursor-pointer active:scale-95 transition-all"
+                        className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-1 bg-[var(--bg-surface)] px-2 py-1 rounded-sm border border-[var(--border-default)] cursor-pointer active:scale-95 transition-all"
                         aria-label="ድምፅ አጫውት"
                       >
-                        <Volume2 className={`w-3.5 h-3.5 ${isPlayingAudio ? 'text-primary animate-pulse' : ''}`} />
+                        <Volume2 className={`w-3.5 h-3.5 ${isPlayingAudio ? 'text-[var(--brand-accent)] animate-pulse' : ''}`} />
                         <span>{isPlayingAudio ? 'በማጫወት ላይ...' : 'ድምፅ (TTS)'}</span>
                       </button>
                     </div>
 
-                    <p className="font-ethiopic text-foreground leading-relaxed">
+                    <p className="font-ethiopic text-[var(--text-primary)] leading-relaxed">
                       አዎ! በአዋጅ ቁጥር <strong>1156/2019</strong> እና <strong>568/2008</strong> መሠረት፣ 
                       የትምህርት ተቋማት እና አሰሪዎች ለአካል ጉዳተኞች ምክንያታዊ ማመቻቸት (Reasonable Accommodation) 
                       የማድረግ ግዴታ አለባቸው። ይህም የተጨማሪ ፈተና ጊዜ ማግኘት፣ የኮምፒውተር ስክሪን አንባቢ (Screen Reader) መጠቀምን ያካትታል።
                     </p>
 
-                    <div className="pt-2 border-t border-border/80 flex flex-wrap items-center gap-2">
-                      <span className="text-[11px] font-mono text-muted-foreground">ምንጭ / Citations:</span>
-                      <span className="bg-card text-foreground px-2 py-0.5 rounded text-[11px] border border-border font-mono flex items-center gap-1">
-                        <FileText className="w-3 h-3 text-primary" />
+                    <div className="pt-2 border-t border-[var(--border-default)] flex flex-wrap items-center gap-2">
+                      <span className="text-[11px] font-mono text-[var(--text-secondary)]">ምንጭ / Citations:</span>
+                      <span className="bg-[var(--bg-surface)] text-[var(--text-primary)] px-2 py-0.5 rounded-sm text-[11px] border border-[var(--border-default)] font-mono flex items-center gap-1">
+                        <FileText className="w-3 h-3 text-[var(--brand-accent)]" />
                         Ethiopian_Labour_Proclamation_1156_2019.pdf (Art. 29)
                       </span>
                     </div>

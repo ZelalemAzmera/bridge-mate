@@ -144,9 +144,9 @@ export function Header() {
           </Link>
         </div>
 
-        {/* CENTER: Minimalist Pill Navigation */}
+        {/* CENTER: Minimalist Architectural Navigation */}
         <nav
-          className="hidden lg:flex items-center gap-1 p-1 bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-xl"
+          className="hidden lg:flex items-center gap-1 p-1 bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-md"
           aria-label={language === 'am' ? 'ዋና ዳሰሳ' : 'Main Navigation'}
         >
           {navItems.map((item) => {
@@ -157,20 +157,14 @@ export function Header() {
                 key={item.href}
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
-                className={`relative flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all min-h-[40px] focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] ${
+                className={`relative flex items-center gap-2 px-3 py-1.5 rounded-sm text-xs font-semibold transition-all min-h-[40px] focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] ${
                   active
-                    ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-xs border border-[var(--border-default)] font-bold'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)]/50'
+                    ? 'bg-[var(--brand-primary)] text-[var(--brand-neutral)] shadow-xs font-bold'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--brand-secondary)]/30'
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${active ? 'text-[var(--brand-primary)]' : 'text-[var(--text-secondary)]'}`} aria-hidden="true" />
+                <Icon className={`w-3.5 h-3.5 ${active ? 'text-[var(--brand-accent)]' : 'text-[var(--text-secondary)]'}`} aria-hidden="true" />
                 <span>{item.label}</span>
-                {active && (
-                  <span
-                    className="absolute -bottom-1 left-3 right-3 h-[2px] bg-[var(--brand-primary)] rounded-full"
-                    aria-hidden="true"
-                  />
-                )}
               </Link>
             );
           })}
@@ -182,7 +176,7 @@ export function Header() {
           <div
             role="group"
             aria-label={language === 'am' ? 'ቋንቋ ይምረጡ' : 'Select Language'}
-            className="inline-flex items-center p-0.5 bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-lg text-[11px] font-bold"
+            className="inline-flex items-center p-0.5 bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-md text-[11px] font-bold"
           >
             {languages.map((l) => (
               <button
@@ -190,9 +184,9 @@ export function Header() {
                 type="button"
                 onClick={() => handleLangSelect(l.code, l.full)}
                 aria-pressed={language === l.code}
-                className={`px-2 py-1.5 rounded-md transition-colors min-h-[36px] min-w-[32px] flex items-center justify-center font-bold cursor-pointer ${
+                className={`px-2 py-1.5 rounded-sm transition-colors min-h-[36px] min-w-[32px] flex items-center justify-center font-bold cursor-pointer ${
                   language === l.code
-                    ? 'bg-[var(--bg-surface)] text-[var(--brand-primary)] shadow-2xs border border-[var(--border-default)]'
+                    ? 'bg-[var(--brand-primary)] text-[var(--brand-neutral)] shadow-2xs'
                     : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
                 title={l.full}
@@ -206,7 +200,7 @@ export function Header() {
           <div
             role="group"
             aria-label={language === 'am' ? 'የፊደል መጠን መቆጣጠሪያ' : 'Font size scaling'}
-            className="inline-flex items-center p-0.5 bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-lg text-xs font-bold"
+            className="inline-flex items-center p-0.5 bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-md text-xs font-bold"
           >
             <button
               type="button"
@@ -216,7 +210,7 @@ export function Header() {
               }}
               disabled={fontScale <= 100}
               aria-label={language === 'am' ? 'የፊደል መጠን ቀንስ (A-)' : 'Decrease font size (A-)'}
-              className="px-2 py-1.5 rounded-md min-h-[36px] min-w-[34px] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 cursor-pointer"
+              className="px-2 py-1.5 rounded-sm min-h-[36px] min-w-[34px] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 cursor-pointer"
             >
               <span>A-</span>
             </button>
@@ -231,7 +225,7 @@ export function Header() {
               }}
               disabled={fontScale >= 200}
               aria-label={language === 'am' ? 'የፊደል መጠን ጨምር (A+)' : 'Increase font size (A+)'}
-              className="px-2 py-1.5 rounded-md min-h-[36px] min-w-[34px] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 cursor-pointer"
+              className="px-2 py-1.5 rounded-sm min-h-[36px] min-w-[34px] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 cursor-pointer"
             >
               <span>A+</span>
             </button>
@@ -248,38 +242,37 @@ export function Header() {
                   : 'Theme switched'
               );
             }}
-            className="min-h-[44px] px-2.5 py-1.5 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-default)] text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-surface)] flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="min-h-[44px] px-2.5 py-1.5 rounded-md bg-[var(--bg-subtle)] border border-[var(--border-default)] text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--brand-secondary)]/30 flex items-center gap-1.5 transition-colors cursor-pointer"
             aria-label={
               language === 'am'
                 ? `የቀለም ገጽታ ቀይር (አሁን ያለው፡ ${theme})`
                 : `Toggle theme (current: ${theme})`
             }
           >
-            {theme === 'light' && <Sun className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />}
-            {theme === 'dark' && <Moon className="w-3.5 h-3.5 text-sky-400" aria-hidden="true" />}
-            {theme === 'high-contrast' && <Sparkles className="w-3.5 h-3.5 text-yellow-400" aria-hidden="true" />}
+            {theme === 'light' && <Sun className="w-3.5 h-3.5 text-[var(--brand-accent)]" aria-hidden="true" />}
+            {theme === 'dark' && <Moon className="w-3.5 h-3.5 text-[var(--brand-secondary)]" aria-hidden="true" />}
+            {theme === 'high-contrast' && <Sparkles className="w-3.5 h-3.5 text-[#FFFF00]" aria-hidden="true" />}
             <span className="hidden sm:inline capitalize">{theme}</span>
           </button>
 
-          {/* High-Priority "Live Human Help (Alt+H)" Button in Emerald-tinted pill */}
+          {/* High-Priority "Live Human Help (Alt+H)" Button in Warm Ochre Accent */}
           <Link
             href="/support"
-            className="min-h-[44px] px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-200 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-all shadow-xs flex items-center gap-2 text-xs font-bold shrink-0 focus-visible:ring-2 focus-visible:ring-emerald-400"
+            className="min-h-[44px] px-3 py-1.5 rounded-md bg-[var(--brand-accent)] text-[var(--brand-primary)] border border-[#C88E45] hover:bg-[#C88E45] transition-all shadow-xs flex items-center gap-2 text-xs font-bold shrink-0 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
             aria-label={
               language === 'am'
                 ? 'የሰው ድጋፍ (አቋራጭ Alt+H)'
                 : 'Live Human Help (Keyboard Shortcut Alt+H)'
             }
           >
-            <span className="relative flex h-2.5 w-2.5" aria-hidden="true">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600" />
+            <span className="relative flex h-2 w-2" aria-hidden="true">
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--brand-primary)]" />
             </span>
-            <Headphones className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
+            <Headphones className="w-3.5 h-3.5 text-[var(--brand-primary)]" aria-hidden="true" />
             <span className="hidden md:inline">
               {language === 'am' ? 'የሰው ድጋፍ' : 'Live Help'}
             </span>
-            <kbd className="hidden lg:inline text-[10px] font-mono px-1 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700">
+            <kbd className="hidden lg:inline text-[10px] font-mono px-1 py-0.5 rounded bg-[var(--brand-primary)] text-[var(--brand-neutral)] font-bold">
               Alt+H
             </kbd>
           </Link>

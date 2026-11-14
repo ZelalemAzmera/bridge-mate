@@ -3,24 +3,34 @@
 @tailwind utilities;
 
 /* ==============================================================================
-   BridgeMate Design System & WCAG 2.2 Level AA Color Tokens
-   Enterprise SaaS Aesthetic: Linear / Stripe / GitHub Primer inspired
+   BridgeMate Editorial Design System & Strict Four-Color Palette
+   1. Primary:   #142B27 (Deep Forest Pine / Hunter Evergreen)
+   2. Secondary: #D9E5D8 (Soft Sage / Pale Laurel)
+   3. Accent:    #D69B52 (Warm Ochre / Honey Amber)
+   4. Neutral:   #F7F6F0 (Warm Bone / Architectural Off-White)
+   WCAG 2.2 Level AA / AAA Compliant
    ============================================================================== */
 
 :root {
-  /* Default Professional Light Theme (AAA Contrast) */
-  --bg-canvas: #F8FAFC;
+  /* Strict Four-Color Palette */
+  --brand-primary: #142B27;
+  --brand-secondary: #D9E5D8;
+  --brand-accent: #D69B52;
+  --brand-neutral: #F7F6F0;
+  --brand-hover: #0E1E1B;
+
+  /* Default Professional Light Theme (AAA 14:1 Contrast) */
+  --bg-canvas: #F7F6F0;
   --bg-surface: #FFFFFF;
-  --bg-subtle: #F1F5F9;
-  --text-primary: #0F172A; /* 17.4:1 contrast against white */
-  --text-secondary: #475569; /* 7.5:1 contrast - verified AA compliant */
-  --border-default: #E2E8F0;
-  --border-input: #94A3B8; /* 2px solid on form inputs */
-  --brand-primary: #0F62FE; /* IBM Carbon Accessible Blue (5.1:1 contrast with #FFFFFF) */
-  --brand-hover: #0353E9;
-  --accent-verified: #047857; /* Deep Emerald for citations and badges */
-  --accent-verified-bg: #ECFDF5;
-  --focus-ring: #00E676; /* 3px solid with 2px offset on :focus-visible */
+  --bg-subtle: #EDEAE1;
+  --bg-secondary: #D9E5D8;
+  --text-primary: #142B27; /* 14:1 contrast against #F7F6F0 */
+  --text-secondary: #42524D; /* 7.2:1 contrast against #F7F6F0 */
+  --border-default: #DDD9CD;
+  --border-input: #BBB5A4; /* 2px solid on form inputs */
+  --accent-verified: #142B27;
+  --accent-verified-bg: #D9E5D8;
+  --focus-ring: #142B27; /* 3px solid with 2px offset on :focus-visible */
 
   /* Tailwind Standard Mappings */
   --background: var(--bg-canvas);
@@ -30,29 +40,44 @@
   --border: var(--border-default);
   --input: var(--border-input);
   --primary: var(--brand-primary);
-  --primary-foreground: #FFFFFF;
+  --primary-foreground: #F7F6F0;
+  --secondary: var(--brand-secondary);
+  --secondary-foreground: #142B27;
+  --accent: var(--brand-accent);
+  --accent-foreground: #142B27;
   --muted: var(--bg-subtle);
   --muted-foreground: var(--text-secondary);
+  --ring: var(--focus-ring);
+
+  /* Typography Stacks */
+  --font-serif: 'Charter', 'Iowan Old Style', 'Palatino Linotype', 'Newsreader', 'Georgia', serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-ethiopic: 'Noto Sans Ethiopic', 'Abyssinica SIL', 'Nyala', sans-serif;
 
   /* Motion Easings */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
-/* High-Contrast Dark Theme */
+/* High-Contrast Dark Theme (Deep Pine Night) */
 [data-theme="dark"] {
-  --bg-canvas: #090D16;
-  --bg-surface: #111827;
-  --bg-subtle: #1F2937;
-  --text-primary: #F8FAFC;
-  --text-secondary: #94A3B8;
-  --border-default: #334155;
-  --border-input: #475569;
-  --brand-primary: #38BDF8; /* Sky 400 for high dark contrast */
-  --brand-hover: #0EA5E9;
-  --accent-verified: #10B981;
-  --accent-verified-bg: #064E3B;
-  --focus-ring: #00E676;
+  --brand-primary: #D9E5D8;
+  --brand-secondary: #1E3530;
+  --brand-accent: #D69B52;
+  --brand-neutral: #0D1916;
+  --brand-hover: #E8F0E7;
+
+  --bg-canvas: #0D1916;
+  --bg-surface: #142521;
+  --bg-subtle: #1B332E;
+  --bg-secondary: #223F39;
+  --text-primary: #F7F6F0;
+  --text-secondary: #A3B5AE;
+  --border-default: #2A453F;
+  --border-input: #3E6159;
+  --accent-verified: #D69B52;
+  --accent-verified-bg: #1B332E;
+  --focus-ring: #D69B52;
 
   --background: var(--bg-canvas);
   --foreground: var(--text-primary);
@@ -61,9 +86,14 @@
   --border: var(--border-default);
   --input: var(--border-input);
   --primary: var(--brand-primary);
-  --primary-foreground: #090D16;
+  --primary-foreground: #0D1916;
+  --secondary: var(--brand-secondary);
+  --secondary-foreground: #F7F6F0;
+  --accent: var(--brand-accent);
+  --accent-foreground: #0D1916;
   --muted: var(--bg-subtle);
   --muted-foreground: var(--text-secondary);
+  --ring: var(--focus-ring);
 }
 
 /* Low-Vision Yellow-on-Black Theme */
@@ -115,22 +145,30 @@ html[data-font-scale="200"] {
   word-spacing: 0.1em;
 }
 
-/* Typography & Ethiopic Script Polish */
+/* Typography & Editorial Polish */
 body {
   background-color: var(--bg-canvas);
   color: var(--text-primary);
   min-height: 100vh;
   margin: 0;
-  font-family: 'Inter', 'Noto Sans Ethiopic', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
   font-size: 1rem;
-  line-height: 1.65;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  line-height: 1.68;
+  letter-spacing: -0.011em;
+  transition: background-color 0.2s ease, color 0.2s ease;
   -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .font-serif {
+  font-family: var(--font-serif);
+  letter-spacing: -0.025em;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
 /* Amharic & Tigrinya line-height breathing room to prevent vertical clipping */
 [lang="am"], [lang="ti"], .font-ethiopic {
-  line-height: 1.75;
+  font-family: var(--font-ethiopic);
+  line-height: 1.78;
   word-break: break-word;
 }
 
