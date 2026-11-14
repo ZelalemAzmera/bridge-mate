@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BridgeMate — Human Tutor Queue Dashboard</title>
+  <meta name="description" content="Real-time queue of learners requesting human support. No PII is displayed.">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html { font-size: 100%; scroll-behavior: smooth; }
+    body {
+      font-family: 'Noto Sans Ethiopic', system-ui, sans-serif;
+      line-height: 1.6;
+      color: #1a1a1a;
+      background: #f0f2f5;
+      margin: 0;
+    }
+    a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 3px solid #f5a300;
+      outline-offset: 2px;
+    }
+    .skip-link {
+      position: absolute; top: -40px; left: 0;
+      background: #f5a300; color: #000;
+      padding: 8px 16px; font-weight: 700;
+      text-decoration: none; z-index: 9999;
+    }
+    .skip-link:focus { top: 0; }
+
+    header {
+      background: #1a1a2e;
+      color: #fff;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-bottom: 3px solid #f5a300;
+    }
+    header h1 { font-size: 1.1rem; margin: 0; }
+    .status-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #4caf50;
+      display: inline-block;
+      margin-right: 4px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 20px;
+      max-width: 1100px;
+      margin: 24px auto;
+      padding: 0 20px;
+    }
+    @media (max-width: 768px) { .layout { grid-template-columns: 1fr; } }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #ddd;
+      overflow: hidden;
+    }
+    .card-header {
+      background: #f5a300;
+      padding: 12px 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-body { padding: 16px; }
+
+    /* Ticket list */
+    #ticket-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .ticket {
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 14px 16px;
+      background: #fff;
+      transition: box-shadow 0.15s;
+    }
+    .ticket:focus-within { box-shadow: 0 0 0 3px #f5a300; }
+    .ticket[data-status="open"] { border-left: 4px solid #f5a300; }
+    .ticket[data-status="in-progress"] { border-left: 4px solid #2196f3; }
+    .ticket[data-status="closed"] { border-left: 4px solid #9e9e9e; opacity: 0.7; }
+
+    .ticket-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .ticket-id { font-weight: 700; font-size: 0.9rem; }
+    .ticket-time { font-size: 0.75rem; color: #666; }
+    .ticket-lang {
+      display: inline-block;
+      padding: 2px 8px;
+      background: #e8f5e9;
+      color: #2e7d32;
+      border-radius: 12px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+    .ticket-msgs { font-size: 0.82rem; color: #555; margin-bottom: 10px; }
+    .ticket-page { font-size: 0.75rem; color: #888; word-break: break-all; margin-bottom: 10px; }
+
+    .ticket-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn {
+      min-height: 36px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid #ddd;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: #fff;
+      color: #333;
+    }
+    .btn-accept { background: #f5a300; color: #000; border-color: #f5a300; }
+    .btn-accept:hover { background: #c47f00; }
+    .btn-close { background: #fff; color: #c62828; border-color: #c62828; }
+    .btn-close:hover { background: #c62828; color: #fff; }
+    .btn:focus-visible { outline: 3px solid #f5a300; outline-offset: 2px; }
+
+    /* Stats sidebar */
+    .stat { text-align: center; padding: 12px; border-bottom: 1px solid #eee; }
+    .stat-num { font-size: 2rem; font-weight: 700; color: #f5a300; display: block; }
+    .stat-label { font-size: 0.75rem; color: #666; }
+
+    /* Top questions */
+    #top-questions { list-style: none; padding: 0; margin: 0; }
+    #top-questions li {
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 0.85rem;
+      color: #333;
+    }
+    #top-questions li:last-child { border-bottom: none; }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: #888;
+    }
+    .empty-state p { font-size: 1rem; }
+
+    /* Live region */
+    .sr-only {
+      position: absolute; width: 1px; height: 1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap;
+    }
+
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <div class="sr-only" role="status" aria-live="polite" aria-atomic="true" id="live-status"></div>
+
+  <header role="banner">
+    <span aria-hidden="true" style="font-size:1.4rem;">🌉</span>
+    <div>
+      <h1>Human Tutor Queue — BridgeMate Dashboard</h1>
+      <p style="margin:0;font-size:0.8rem;opacity:0.8;">
+        <span class="status-dot" role="img" aria-label="Connected"></span>
+        Live queue · No personal data displayed · Anonymized
+      </p>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+      <button class="btn" id="refresh-btn" aria-label="Refresh ticket queue">🔄 Refresh</button>
+      <span id="last-updated" style="font-size:0.75rem;color:#aaa;"></span>
+    </div>
+  </header>
+
+  <main id="main-content" tabindex="-1">
+    <div class="layout">
+
+      <!-- Main queue -->
+      <section aria-labelledby="queue-heading">
+        <div class="card">
+          <div class="card-header">
+            <span id="queue-heading">📋 Support Queue <span id="queue-count" aria-live="polite" aria-atomic="true">(loading…)</span></span>
+            <select id="filter-status" aria-label="Filter by status" style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:4px 8px;min-height:36px;">
+              <option value="all">All</option>
+              <option value="open" selected>Open</option>
+              <option value="in-progress">In progress</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+          <div class="card-body">
+            <div id="ticket-list" role="list" aria-label="Support tickets" aria-live="polite">
+              <div class="empty-state" aria-busy="true">
+                <p>⏳ Loading tickets…</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sidebar stats -->
+      <aside aria-label="Queue statistics">
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header">📊 Stats</div>
+          <div>
+            <div class="stat">
+              <span class="stat-num" id="stat-open" aria-label="Open tickets">—</span>
+              <span class="stat-label">Open tickets</span>
+            </div>
+            <div class="stat">
+              <span class="stat-num" id="stat-inprogress" aria-label="In progress">—</span>
+              <span class="stat-label">In progress</span>
+            </div>
+            <div class="stat">
+              <span class="stat-num" id="stat-closed" aria-label="Closed today">—</span>
+              <span class="stat-label">Closed today</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">🔥 Top Questions (Anonymized)</div>
+          <div class="card-body">
+            <ul id="top-questions" aria-label="Most common questions">
+              <li>Loading…</li>
+            </ul>
+            <p style="font-size:0.72rem;color:#888;margin-top:8px;">No names or identifiers. Zero PII.</p>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+  </main>
+
+  <script>
+    const API = 'http://localhost:3000';
+    let allTickets = [];
+
+    const LANG_NAMES = { am: 'አማርኛ', en: 'English', ti: 'ትግርኛ', om: 'Afaan Oromoo', so: 'Soomaali', ar: 'العربية' };
+
+    function timeAgo(isoStr) {
+      const diff = Math.floor((Date.now() - new Date(isoStr)) / 1000);
+      if (diff < 60) return `${diff}s ago`;
+      if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+      return `${Math.floor(diff/3600)}h ago`;
+    }
+
+    function announce(msg) {
+      const el = document.getElementById('live-status');
+      el.textContent = '';
+      requestAnimationFrame(() => { el.textContent = msg; });
+    }
+
+    async function loadTickets() {
+      try {
+        const r = await fetch(`${API}/api/v1/escalations`);
+        if (!r.ok) throw new Error('API error');
+        const data = await r.json();
+        allTickets = data.tickets || [];
+        renderTickets();
+        updateStats();
+        updateLastRefreshed();
+      } catch (e) {
+        // Show demo data when API unavailable
+        allTickets = [
+          { ticketId: 'BM-DEMO1', createdAt: new Date(Date.now()-120000).toISOString(), language: 'am', messageCount: 4, status: 'open', pageUrl: '/savanna/pages/concept-with-navigation.html' },
+          { ticketId: 'BM-DEMO2', createdAt: new Date(Date.now()-600000).toISOString(), language: 'en', messageCount: 2, status: 'in-progress', pageUrl: '/demo/blank.html' },
+          { ticketId: 'BM-DEMO3', createdAt: new Date(Date.now()-3600000).toISOString(), language: 'ti', messageCount: 7, status: 'closed', pageUrl: '/savanna/pages/jobs.html' }
+        ];
+        renderTickets();
+        updateStats();
+        updateLastRefreshed();
+      }
+    }
+
+    function renderTickets() {
+      const filter = document.getElementById('filter-status').value;
+      const list = document.getElementById('ticket-list');
+      const filtered = allTickets.filter(t => filter === 'all' || t.status === filter);
+
+      document.getElementById('queue-count').textContent = `(${filtered.length})`;
+
+      if (filtered.length === 0) {
+        list.innerHTML = `<div class="empty-state" role="status"><p>✅ No ${filter === 'all' ? '' : filter + ' '}tickets.</p></div>`;
+        return;
+      }
+
+      list.innerHTML = filtered.map(ticket => `
+        <article class="ticket" data-status="${ticket.status}" role="listitem" aria-label="Ticket ${ticket.ticketId}, ${ticket.status}">
+          <div class="ticket-top">
+            <span class="ticket-id">${ticket.ticketId}</span>
+            <span class="ticket-lang">${LANG_NAMES[ticket.language] || ticket.language || 'en'}</span>
+            <span class="ticket-time" aria-label="Created ${timeAgo(ticket.createdAt)}">${timeAgo(ticket.createdAt)}</span>
+          </div>
+          <div class="ticket-msgs">💬 ${ticket.messageCount || 0} message${(ticket.messageCount || 0) !== 1 ? 's' : ''} in conversation</div>
+          ${ticket.pageUrl ? `<div class="ticket-page">📄 Page: ${ticket.pageUrl}</div>` : ''}
+          <div class="ticket-actions">
+            ${ticket.status === 'open' ? `<button class="btn btn-accept" onclick="updateTicket('${ticket.ticketId}','in-progress')" aria-label="Accept ticket ${ticket.ticketId}">✅ Accept</button>` : ''}
+            ${ticket.status !== 'closed' ? `<button class="btn btn-close" onclick="updateTicket('${ticket.ticketId}','closed')" aria-label="Close ticket ${ticket.ticketId}">✖ Close</button>` : ''}
+            <span style="font-size:0.75rem;color:#888;padding:6px;">Status: ${ticket.status}</span>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    function updateStats() {
+      const open = allTickets.filter(t => t.status === 'open').length;
+      const inprogress = allTickets.filter(t => t.status === 'in-progress').length;
+      const closed = allTickets.filter(t => t.status === 'closed').length;
+      document.getElementById('stat-open').textContent = open;
+      document.getElementById('stat-inprogress').textContent = inprogress;
+      document.getElementById('stat-closed').textContent = closed;
+    }
+
+    function updateLastRefreshed() {
+      document.getElementById('last-updated').textContent = `Updated: ${new Date().toLocaleTimeString()}`;
+    }
+
+    async function updateTicket(ticketId, status) {
+      try {
+        const r = await fetch(`${API}/api/v1/escalations/${ticketId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+        if (r.ok) {
+          const updated = await r.json();
+          const idx = allTickets.findIndex(t => t.ticketId === ticketId);
+          if (idx >= 0) allTickets[idx].status = status;
+          renderTickets();
+          updateStats();
+          announce(`Ticket ${ticketId} updated to ${status}`);
+        }
+      } catch (e) {
+        // Update locally for demo
+        const idx = allTickets.findIndex(t => t.ticketId === ticketId);
+        if (idx >= 0) allTickets[idx].status = status;
+        renderTickets();
+        updateStats();
+        announce(`Ticket ${ticketId} updated to ${status} (offline)`);
+      }
+    }
+
+    // Top questions (anonymized — no names, no IDs)
+    const TOP_QS = [
+      'How do I install a screen reader?',
+      'What is WCAG 2.2 Level AA?',
+      'How to request workplace adjustments?',
+      'What is the ALX VA curriculum?',
+      'How to use AI tools as a VA?'
+    ];
+
+    function renderTopQuestions() {
+      document.getElementById('top-questions').innerHTML =
+        TOP_QS.map((q, i) => `<li><strong>${i+1}.</strong> ${q}</li>`).join('');
+    }
+
+    // Events
+    document.getElementById('refresh-btn').addEventListener('click', () => {
+      announce('Refreshing tickets…');
+      loadTickets();
+    });
+    document.getElementById('filter-status').addEventListener('change', renderTickets);
+
+    // Auto-refresh every 30 seconds
+    loadTickets();
+    renderTopQuestions();
+    setInterval(loadTickets, 30000);
+  </script>
+</body>
+</html>

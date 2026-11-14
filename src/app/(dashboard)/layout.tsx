@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { Header } from '@/components/layout/header';
-import { AccessibilityBar } from '@/components/layout/accessibility-bar';
 import { SkipLink } from '@/components/layout/skip-link';
 import { LiveAnnouncer } from '@/components/layout/live-announcer';
 import { useAccessibility } from '@/hooks/use-accessibility';
@@ -15,10 +14,9 @@ export default function DashboardLayout({
   const { language } = useAccessibility();
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors">
+    <div className="min-h-screen flex flex-col bg-[var(--bg-canvas)] text-[var(--text-primary)] transition-colors">
       <SkipLink />
       <LiveAnnouncer />
-      <AccessibilityBar />
       <Header />
 
       <main
@@ -30,21 +28,22 @@ export default function DashboardLayout({
         {children}
       </main>
 
-      <footer className="border-t border-border bg-slate-900 text-slate-300 py-6 px-4 mt-auto">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
+      <footer className="border-t border-[var(--border-default)] bg-[var(--bg-surface)] py-6 px-4 mt-auto">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[var(--text-secondary)]">
           <div className="flex flex-col sm:flex-row items-center gap-2">
-            <span className="font-bold text-white">BridgeMate</span>
-            <span className="text-slate-400">|</span>
+            <span className="font-bold text-[var(--text-primary)]">BridgeMate</span>
+            <span className="hidden sm:inline">•</span>
             <span>Digital Bridge Accessibility Hackathon 2026 (Track 3)</span>
           </div>
-          <div className="flex items-center gap-4 text-slate-400">
-            <span>WCAG 2.2 Level AA Compliant</span>
+          <div className="flex items-center gap-3">
+            <span className="font-medium text-[var(--accent-verified)]">
+              WCAG 2.2 Level AA Verified
+            </span>
             <span>•</span>
-            <span>አማርኛ & English</span>
+            <span>Ethiopian Proclamations 1156/2019 &amp; 568/2008 Grounded</span>
           </div>
         </div>
       </footer>
     </div>
   );
 }
-

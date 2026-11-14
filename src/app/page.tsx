@@ -28,7 +28,6 @@ import {
   Activity,
 } from 'lucide-react';
 import { Header } from '@/components/layout/header';
-import { AccessibilityBar } from '@/components/layout/accessibility-bar';
 import { SkipLink } from '@/components/layout/skip-link';
 import { LiveAnnouncer } from '@/components/layout/live-announcer';
 import { Button } from '@/components/ui/button';
@@ -150,7 +149,6 @@ export default function HomePage() {
     <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-200">
       <SkipLink />
       <LiveAnnouncer />
-      <AccessibilityBar />
       <Header />
 
       <main id="main-content" className="flex-1 w-full">
@@ -196,28 +194,28 @@ export default function HomePage() {
             {/* Primary Action Buttons */}
             <div className="flex flex-wrap items-center justify-center gap-2.5 pt-2">
               <Link href="/learn">
-                <Button size="default" className="gap-2 shadow-sm bg-primary hover:bg-blue-700 text-white font-bold">
+                <Button size="default" className="gap-2 shadow-xs bg-[var(--brand-primary)] hover:bg-[var(--brand-hover)] text-white font-bold min-h-[44px]">
                   <BookOpen className="w-4 h-4" />
-                  <span>{isAm ? 'ረዳቱን ሞክር' : 'Open AI Assistant'}</span>
+                  <span>{isAm ? 'የትምህርት ረዳቱን ክፈት' : 'Open AI Tutor'}</span>
                 </Button>
               </Link>
 
-              <Link href="/decoder">
-                <Button size="default" variant="outline" className="gap-2 border-border font-bold">
-                  <FileSearch className="w-4 h-4 text-amber-600" />
-                  <span>{isAm ? 'ማስታወቂያ መርምር' : 'Decode Notice'}</span>
+              <Link href="/jobs">
+                <Button size="default" variant="outline" className="gap-2 border-[var(--border-default)] font-bold min-h-[44px]">
+                  <Briefcase className="w-4 h-4 text-[var(--brand-primary)]" />
+                  <span>{isAm ? 'የሥራ በር (Career Gateway)' : 'Career Gateway'}</span>
                 </Button>
               </Link>
 
               <Link href="/support">
-                <Button size="default" variant="secondary" className="gap-2 font-bold">
-                  <Headphones className="w-4 h-4 text-primary" />
+                <Button size="default" className="gap-2 font-bold min-h-[44px] bg-emerald-50 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-700 hover:bg-emerald-100">
+                  <Headphones className="w-4 h-4 text-emerald-700 dark:text-emerald-300" />
                   <span>{isAm ? 'የሰው ድጋፍ (Alt+H)' : 'Live Help (Alt+H)'}</span>
                 </Button>
               </Link>
 
               <Link href="/low-bandwidth">
-                <Button size="default" variant="ghost" className="gap-1.5 text-xs text-muted-foreground hover:text-foreground">
+                <Button size="default" variant="ghost" className="gap-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] min-h-[44px]">
                   <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
                   <span>{isAm ? 'ቀላል ገጽ (2G <15KB)' : '2G Mode (<15KB)'}</span>
                 </Button>
@@ -544,6 +542,7 @@ export default function HomePage() {
           </div>
           <div className="flex flex-wrap items-center justify-center gap-3 text-slate-400">
             <Link href="/learn" className="hover:text-white transition-colors">Tutor</Link>
+            <Link href="/jobs" className="hover:text-white transition-colors">Career Gateway</Link>
             <Link href="/decoder" className="hover:text-white transition-colors">Decoder</Link>
             <Link href="/translator" className="hover:text-white transition-colors">Accommodation</Link>
             <Link href="/support" className="hover:text-white transition-colors">Live Help</Link>

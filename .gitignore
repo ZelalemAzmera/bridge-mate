@@ -38,3 +38,7 @@ next-env.d.ts
 # Agent logs & temporary previews
 .agents/
 landing-preview*.png
+
+api/node_modules/
+vendor/
+

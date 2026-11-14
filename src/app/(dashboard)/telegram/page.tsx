@@ -1,330 +1,233 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Send, 
-  Sparkles, 
-  CheckCheck, 
-  Volume2, 
-  Headphones, 
-  ShieldCheck, 
-  FileSearch, 
-  Bell, 
-  Copy, 
-  Check, 
-  MessageSquare,
-  Bot
-} from 'lucide-react';
+import { useRef, useState } from 'react'
 
-interface ChatBubble {
-  id: string;
-  sender: 'user' | 'bot';
-  text: string;
-  time: string;
+interface CommandResult {
+  status: string
+  answer?: string
+  message?: string
+  citations?: string[]
 }
 
-export default function TelegramSimulatorPage() {
-  const [messages, setMessages] = useState<ChatBubble[]>([
-    {
-      id: 'msg-1',
-      sender: 'bot',
-      text: '👋 *እንኳን ወደ ብሪጅሜት (BridgeMate) ቴሌግራም ረዳት በደህና መጡ!* 🇪🇹\n\nብሪጅሜት ለትምህርትና ለሥራ ዕድሎች ተደራሽነትን የሚያረጋግጥ ረዳት ነው። የሚከተሉትን ትዕዛዞች መጠቀም ይችላሉ፡\n\n• /ask <ጥያቄ> — በሥርዓተ-ትምህርትና በሕግ የተደገፈ ማብራሪያ\n• /decode <ማስታወቂያ> — የሥራ ማስታወቂያ ማነቆዎችን መፈተሽ\n• /livehelp — ወዲያውኑ ከቀጥታ የሰው ረዳት ጋር መገናኘት\n• /alerts — አዳዲስ የሥራ ማስታወቂያዎችን በቴሌግራም መመዝገብ\n\n_ጥያቄዎን ዝም ብለው በመጻፍም መልስ ማግኘት ይችላሉ!_',
-      time: '12:00',
-    },
-  ]);
-  const [inputText, setInputText] = useState('');
-  const [isSending, setIsSending] = useState(false);
-  const [copiedLink, setCopiedLink] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+export default function TelegramPage() {
+  const [command, setCommand] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [results, setResults] = useState<CommandResult[]>([])
+  const logRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const handleSend = async (textToSend?: string) => {
-    const text = (textToSend || inputText).trim();
-    if (!text || isSending) return;
-
-    setInputText('');
-    setIsSending(true);
-
-    const userMsgId = `user-${Date.now()}`;
-    const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    setMessages((prev) => [
-      ...prev,
-      { id: userMsgId, sender: 'user', text, time: nowTime },
-    ]);
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!command.trim()) return
+    setLoading(true)
 
     try {
-      const res = await fetch('/api/telegram/webhook', {
+      const res = await fetch('/api/v1/scrape-and-guide', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          update_id: Math.floor(Math.random() * 1000000),
-          message: {
-            message_id: Math.floor(Math.random() * 10000),
-            from: { id: 88921102, first_name: 'Evaluator', username: 'judge_2026' },
-            chat: { id: 88921102, type: 'private' },
-            date: Math.floor(Date.now() / 1000),
-            text,
-          },
-        }),
-      });
-
-      // Poll recent outgoing log from webhook endpoint
-      const logRes = await fetch('/api/telegram/webhook');
-      const logData = await logRes.json();
-      const latest = logData.recentLog?.[0];
-
-      if (latest && latest.text) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `bot-${Date.now()}`,
-            sender: 'bot',
-            text: latest.text,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          },
-        ]);
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `bot-${Date.now()}`,
-            sender: 'bot',
-            text: 'መልስ ተዘጋጅቷል። እባክዎ እንደገና ይሞክሩ።',
-            time: nowTime,
-          },
-        ]);
-      }
-    } catch (err: any) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `bot-${Date.now()}`,
-          sender: 'bot',
-          text: `⚠️ Error communicating with Telegram webhook: ${err.message}`,
-          time: nowTime,
-        },
-      ]);
+        body: JSON.stringify({ query: command }),
+      })
+      const data: CommandResult = await res.json()
+      setResults((prev) => [...prev, data])
+    } catch {
+      setResults((prev) => [...prev, { status: 'error', message: 'Network error — please try again.' }])
     } finally {
-      setIsSending(false);
+      setLoading(false)
+      setCommand('')
     }
-  };
+  }
 
-  const speakText = (text: string) => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    const clean = text.replace(/[*_#`]/g, '');
-    const isAmharic = /[\u1200-\u137F]/.test(clean);
-    const utt = new SpeechSynthesisUtterance(clean);
-    utt.lang = isAmharic ? 'am-ET' : 'en-US';
-    utt.rate = 0.95;
-    window.speechSynthesis.speak(utt);
-  };
+  const botCommands = [
+    { cmd: '/ask <question>', desc: 'Get course guidance' },
+    { cmd: '/scrape <url>', desc: 'Analyze any page' },
+    { cmd: '/decode <job_text>', desc: 'Decode job requirements' },
+    { cmd: '/livehelp', desc: 'Request human tutor' },
+    { cmd: '/alerts', desc: 'Subscribe to job alerts' },
+  ]
 
-  const copyWebhookUrl = () => {
-    const url = `${typeof window !== 'undefined' ? window.location.origin : 'https://bridgemate.et'}/api/telegram/webhook`;
-    navigator.clipboard.writeText(url);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
-  };
+  const steps = [
+    { n: '1', title: 'Send a command', desc: 'Type a /command into Telegram or use the simulator below.' },
+    { n: '2', title: 'Engine processes', desc: 'BridgeMate retrieves and cites from Ethiopian law and ALX corpus.' },
+    { n: '3', title: 'Get a cited answer', desc: 'Receive a structured answer with legal and course citations.' },
+  ]
 
   return (
-    <div className="space-y-8 pb-16">
-      {/* Header Banner */}
-      <div className="rounded-2xl border border-slate-700/60 bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 p-6 md:p-8 shadow-xl">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20">
-              <Bot className="w-3.5 h-3.5" />
-              <span>Track 3: Web & Telegram-Based Assistant</span>
-            </div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white">
-              BridgeMate Telegram Bot Assistant & Alert Engine
-            </h1>
-            <p className="text-slate-300 text-sm md:text-base leading-relaxed">
-              Official Track 3 Deliverable on <strong>digitalbridge.et</strong>: A multilingual voice and text tutor in Telegram with strict course citations, 1-click live human escalation, and job alert dispatching.
-            </p>
-          </div>
+    <>
+      <a
+        href="#main-content"
+        style={{position:'absolute',top:'-40px',left:0,background:'#0F62FE',color:'#fff',padding:'8px 16px',zIndex:9999,textDecoration:'none',fontWeight:600}}
+        onFocus={e => (e.currentTarget.style.top='0')}
+        onBlur={e => (e.currentTarget.style.top='-40px')}
+      >
+        Skip to main content
+      </a>
 
-          <div className="flex flex-col sm:flex-row gap-3">
-            <button
-              onClick={copyWebhookUrl}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-medium text-xs transition-all focus:outline-none focus:ring-2 focus:ring-sky-400"
-              aria-label="Copy Webhook Endpoint URL"
-            >
-              {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-              <span>{copiedLink ? 'Copied Webhook URL' : 'Copy Webhook URL'}</span>
-            </button>
-          </div>
-        </div>
-      </div>
+      <main id="main-content" className="max-w-3xl mx-auto px-4 py-10" style={{ color: 'var(--text-primary)' }}>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left: Quick Commands & Architecture Overview */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-5 space-y-4 shadow-md">
-            <h2 className="text-sm font-bold text-white flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-sky-400" />
-              <span>One-Click Test Commands</span>
-            </h2>
-            <p className="text-xs text-slate-400">
-              Click any chip below to simulate standard user interactions through the Telegram webhook:
-            </p>
+        {/* Hero */}
+        <section aria-labelledby="hero-heading" className="mb-10">
+          <h1 id="hero-heading" className="text-3xl font-bold mb-3">Telegram &amp; 2G Assistant</h1>
+          <p className="text-base leading-relaxed" style={{ color: 'var(--text-secondary)', maxWidth: '68ch' }}>
+            BridgeMate works fully offline on slow 2G connections via Telegram. No app required — just a basic SMS-capable phone. Access course guidance, job decoding, and live human help from anywhere in Ethiopia.
+          </p>
+        </section>
 
-            <div className="space-y-2">
-              <button
-                onClick={() => handleSend('/ask በአዋጅ 568/2008 መሠረት ለፈተና ተጨማሪ ጊዜ መጠየቅ እችላለሁ?')}
-                className="w-full text-left p-3 rounded-lg bg-slate-950 border border-slate-800 hover:border-sky-500/50 text-xs text-slate-200 transition-all flex items-start gap-2.5"
-              >
-                <MessageSquare className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="text-white block font-mono">/ask &lt;ጥያቄ&gt;</strong>
-                  <span className="text-slate-400 text-[11px]">Ask about exam accommodation under Ethiopian law with citations</span>
-                </div>
-              </button>
-
-              <button
-                onClick={() => handleSend('/decode Junior Developer wanted. Must possess driver license and physical filing on 4th floor.')}
-                className="w-full text-left p-3 rounded-lg bg-slate-950 border border-slate-800 hover:border-sky-500/50 text-xs text-slate-200 transition-all flex items-start gap-2.5"
-              >
-                <FileSearch className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="text-white block font-mono">/decode &lt;notice&gt;</strong>
-                  <span className="text-slate-400 text-[11px]">Identify mobility and physical barriers in job circular</span>
-                </div>
-              </button>
-
-              <button
-                onClick={() => handleSend('/livehelp')}
-                className="w-full text-left p-3 rounded-lg bg-slate-950 border border-slate-800 hover:border-sky-500/50 text-xs text-slate-200 transition-all flex items-start gap-2.5"
-              >
-                <Headphones className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="text-white block font-mono">/livehelp</strong>
-                  <span className="text-slate-400 text-[11px]">Instant 1-click human specialist escalation with deep link</span>
-                </div>
-              </button>
-
-              <button
-                onClick={() => handleSend('/alerts')}
-                className="w-full text-left p-3 rounded-lg bg-slate-950 border border-slate-800 hover:border-sky-500/50 text-xs text-slate-200 transition-all flex items-start gap-2.5"
-              >
-                <Bell className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="text-white block font-mono">/alerts</strong>
-                  <span className="text-slate-400 text-[11px]">Subscribe chat ID to job and content notifications</span>
-                </div>
-              </button>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 space-y-2">
-            <h3 className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>Dual-Mode Execution</span>
-            </h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              <strong>Offline Sandbox:</strong> Works immediately without external API keys or VPNs.<br/>
-              <strong>Live Telegram:</strong> Set <code className="text-emerald-300 font-mono">TELEGRAM_BOT_TOKEN</code> in <code className="text-slate-300 font-mono">.env.local</code> to connect your real bot from <code className="text-sky-300 font-mono">@BotFather</code>.
-            </p>
-          </div>
-        </div>
-
-        {/* Right: Telegram Mobile Chat Frame */}
-        <div className="lg:col-span-7 flex justify-center">
-          <div className="w-full max-w-md rounded-2xl border-2 border-slate-700 bg-slate-950 overflow-hidden shadow-2xl flex flex-col h-[640px]">
-            {/* Telegram Header */}
-            <div className="bg-[#17212B] px-4 py-3 border-b border-slate-800 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-sky-500 flex items-center justify-center text-white font-bold text-base shadow">
-                  BM
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
-                    <span>BridgeMate Assistant</span>
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
-                  </h3>
-                  <p className="text-xs text-sky-400 font-mono">@BridgeMateAssistantBot • bot</p>
-                </div>
-              </div>
-              <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">
-                Track 3
-              </span>
-            </div>
-
-            {/* Telegram Chat Message History */}
-            <div 
-              className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#0E1621] text-xs leading-relaxed"
-              role="log"
-              aria-live="polite"
-            >
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
+        {/* Bot info card */}
+        <section aria-labelledby="bot-heading" className="rounded-xl border p-6 mb-8" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}>
+          <h2 id="bot-heading" className="text-lg font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
+            @BridgeMateBot
+          </h2>
+          <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>Available 24/7 on Telegram</p>
+          <ul className="space-y-2" role="list">
+            {botCommands.map(({ cmd, desc }) => (
+              <li key={cmd} className="flex gap-3 text-sm">
+                <code
+                  className="font-mono px-2 py-1 rounded shrink-0"
+                  style={{ background: 'var(--bg-subtle)', color: 'var(--brand-primary)' }}
                 >
-                  <div
-                    className={`max-w-[85%] rounded-2xl p-3 shadow-md whitespace-pre-wrap ${
-                      msg.sender === 'user'
-                        ? 'bg-[#2B5278] text-white rounded-br-none'
-                        : 'bg-[#182533] text-slate-100 rounded-bl-none border border-slate-800'
-                    }`}
-                  >
-                    <div>{msg.text}</div>
+                  {cmd}
+                </code>
+                <span style={{ color: 'var(--text-secondary)' }}>{desc}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
 
-                    <div className="mt-2 flex items-center justify-between gap-3 text-[10px] text-slate-400 border-t border-white/10 pt-1.5">
-                      {msg.sender === 'bot' && (
-                        <button
-                          onClick={() => speakText(msg.text)}
-                          className="hover:text-emerald-300 flex items-center gap-1 text-[11px]"
-                          aria-label="Listen with speech synthesis"
-                        >
-                          <Volume2 className="w-3.5 h-3.5" />
-                          <span>አዳምጥ (Listen)</span>
-                        </button>
-                      )}
-                      <div className="ml-auto flex items-center gap-1">
-                        <span>{msg.time}</span>
-                        {msg.sender === 'user' && <CheckCheck className="w-3.5 h-3.5 text-sky-400" />}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Telegram Input Bar */}
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSend();
-              }}
-              className="bg-[#17212B] p-2.5 border-t border-slate-800 flex items-center gap-2"
-            >
-              <input
-                type="text"
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                placeholder="Write a message or command (/ask, /livehelp)..."
-                className="flex-1 rounded-xl bg-[#0E1621] border border-slate-700 px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                aria-label="Telegram Message Input"
-              />
-              <button
-                type="submit"
-                disabled={isSending || !inputText.trim()}
-                className="w-9 h-9 rounded-full bg-sky-500 hover:bg-sky-600 disabled:opacity-40 text-white flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400"
-                aria-label="Send Telegram Message"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
+        {/* QR Code placeholder */}
+        <section aria-labelledby="qr-heading" className="rounded-xl border p-6 mb-8 text-center" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}>
+          <h2 id="qr-heading" className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+            Open on Telegram
+          </h2>
+          <div
+            role="img"
+            aria-label="QR code — scan to open BridgeMateBot on Telegram"
+            className="mx-auto w-40 h-40 rounded-xl flex items-center justify-center mb-4 border-2"
+            style={{ borderColor: 'var(--border-default)', background: 'var(--bg-subtle)' }}
+          >
+            <span className="text-xs text-center px-3" style={{ color: 'var(--text-secondary)' }}>
+              QR Code<br />Scan to open<br />Telegram Bot
+            </span>
           </div>
-        </div>
-      </div>
-    </div>
-  );
+          <a
+            href="https://t.me/BridgeMateBot"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open BridgeMateBot on Telegram"
+            className="inline-flex items-center gap-2 px-5 text-sm font-semibold text-white rounded-lg"
+            style={{ minHeight: '44px', background: '#229ED9' }}
+            onFocus={(e) => (e.currentTarget.style.outline = '3px solid var(--focus-ring)')}
+            onBlur={(e) => (e.currentTarget.style.outline = '')}
+          >
+            Open @BridgeMateBot on Telegram
+          </a>
+        </section>
+
+        {/* How it works */}
+        <section aria-labelledby="how-heading" className="mb-8">
+          <h2 id="how-heading" className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+            How It Works
+          </h2>
+          <ol className="space-y-4" role="list">
+            {steps.map(({ n, title, desc }) => (
+              <li key={n} className="flex gap-4 items-start">
+                <span
+                  className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white"
+                  aria-hidden="true"
+                  style={{ background: 'var(--brand-primary)' }}
+                >
+                  {n}
+                </span>
+                <div>
+                  <strong className="block text-sm font-semibold mb-0.5" style={{ color: 'var(--text-primary)' }}>{title}</strong>
+                  <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{desc}</span>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        {/* 2G / Offline explanation */}
+        <section aria-labelledby="offline-heading" className="rounded-xl border p-6 mb-8" style={{ background: 'var(--accent-verified-bg)', borderColor: 'var(--accent-verified)' }}>
+          <h2 id="offline-heading" className="text-lg font-semibold mb-2" style={{ color: 'var(--accent-verified)' }}>
+            2G &amp; Offline Mode
+          </h2>
+          <p className="text-sm leading-relaxed" style={{ color: '#065F46', maxWidth: '68ch' }}>
+            BridgeMate&apos;s Telegram bot works over <strong>2G connections</strong> and even with intermittent connectivity. The entire Ethiopian law corpus (Proclamation 1156/2019, Proclamation 568/2008) and ALX module index are <strong>cached locally</strong> on the bot server — no external API calls required for core guidance.
+          </p>
+        </section>
+
+        {/* Try it Now simulator */}
+        <section aria-labelledby="simulator-heading" className="rounded-xl border p-6" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}>
+          <h2 id="simulator-heading" className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+            Try It Now — Command Simulator
+          </h2>
+          <form onSubmit={handleSubmit} aria-label="Telegram command simulator" className="flex gap-2 mb-4 flex-wrap">
+            <label htmlFor="command-input" className="sr-only">Enter a Telegram command</label>
+            <input
+              id="command-input"
+              type="text"
+              value={command}
+              onChange={(e) => setCommand(e.target.value)}
+              placeholder="/ask How do I request an accommodation?"
+              className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none"
+              style={{ borderColor: 'var(--border-input)', minHeight: '44px', minWidth: '200px' }}
+              onFocus={(e) => (e.currentTarget.style.outline = '3px solid var(--focus-ring)')}
+              onBlur={(e) => (e.currentTarget.style.outline = '')}
+              aria-label="Telegram command input"
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              aria-label="Send command to simulator"
+              className="px-5 text-sm font-semibold text-white rounded-lg disabled:opacity-60"
+              style={{ minHeight: '44px', background: 'var(--brand-primary)' }}
+              onFocus={(e) => (e.currentTarget.style.outline = '3px solid var(--focus-ring)')}
+              onBlur={(e) => (e.currentTarget.style.outline = '')}
+            >
+              {loading ? 'Sending…' : 'Send'}
+            </button>
+          </form>
+
+          {/* Response log */}
+          <div
+            ref={logRef}
+            role="log"
+            aria-live="polite"
+            aria-label="Command responses"
+            className="space-y-3 max-h-80 overflow-y-auto"
+          >
+            {results.length === 0 && (
+              <p className="text-sm italic" style={{ color: 'var(--text-secondary)' }}>
+                Responses will appear here…
+              </p>
+            )}
+            {results.map((r, i) => (
+              <article
+                key={i}
+                className="rounded-lg p-4 border text-sm"
+                style={{ background: 'var(--bg-subtle)', borderColor: 'var(--border-default)' }}
+              >
+                {r.status === 'error' ? (
+                  <p style={{ color: '#DC2626' }}><strong>Error:</strong> {r.message}</p>
+                ) : (
+                  <>
+                    {r.answer && <p style={{ color: 'var(--text-primary)' }}>{r.answer}</p>}
+                    {r.message && <p style={{ color: 'var(--text-secondary)' }}>{r.message}</p>}
+                    {r.citations && r.citations.length > 0 && (
+                      <ul className="mt-2 space-y-1" role="list">
+                        {r.citations.map((c, j) => (
+                          <li key={j} className="text-xs" style={{ color: 'var(--accent-verified)' }}>
+                            📚 {c}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </>
+                )}
+              </article>
+            ))}
+          </div>
+        </section>
+      </main>
+    </>
+  )
 }

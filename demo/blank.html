@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BridgeMate Demo — Blank Page (Level 1 Portability Test)</title>
+  <meta name="description" content="Zero-dependency demo: proves the db-assistant Web Component works on any page with a single script tag.">
+  <style>
+    /* Minimal accessible base — NO Bootstrap, NO Savanna CSS */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { font-size: 100%; scroll-behavior: smooth; }
+    body {
+      font-family: 'Noto Sans Ethiopic', system-ui, -apple-system, sans-serif;
+      line-height: 1.7;
+      color: #1a1a1a;
+      background: #fafafa;
+      margin: 0;
+      padding: 0;
+    }
+    a:focus-visible, button:focus-visible { outline: 3px solid #f5a300; outline-offset: 2px; }
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 0;
+      background: #f5a300;
+      color: #000;
+      padding: 8px 16px;
+      font-weight: 700;
+      text-decoration: none;
+      z-index: 9999;
+      border-radius: 0 0 8px 0;
+    }
+    .skip-link:focus { top: 0; }
+
+    header {
+      background: #1a1a2e;
+      color: #fff;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    header h1 { font-size: 1.2rem; margin: 0; }
+
+    main {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+    h2 { font-size: 1.4rem; margin-top: 0; border-bottom: 2px solid #f5a300; padding-bottom: 8px; }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #a5d6a7;
+      margin: 4px;
+    }
+
+    .info-box {
+      background: #fff8e1;
+      border: 1px solid #f5a300;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 24px 0;
+    }
+    .info-box h3 { margin-top: 0; font-size: 1rem; }
+
+    code {
+      background: #f0f0f0;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+    pre {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    /* Demo interaction area */
+    .demo-area {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 24px 0;
+    }
+    .demo-area input, .demo-area select {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-bottom: 12px;
+      font-family: inherit;
+    }
+    .demo-area button {
+      min-height: 44px;
+      padding: 10px 20px;
+      background: #f5a300;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .demo-area button:hover { background: #c47f00; }
+
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: #666;
+      font-size: 0.85rem;
+      border-top: 1px solid #eee;
+      margin-top: 48px;
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <header role="banner">
+    <span aria-hidden="true" style="font-size:1.5rem;">🌉</span>
+    <h1>BridgeMate — Level 1 Portability Demo</h1>
+    <span class="badge">Zero Dependencies</span>
+    <span class="badge">WCAG 2.2 AA</span>
+  </header>
+
+  <main id="main-content" tabindex="-1">
+    <h2>What this page proves</h2>
+    <p>
+      This page has <strong>no Bootstrap, no Tailwind, no React, no framework</strong> — just a bare HTML page.
+      The <code>&lt;db-assistant&gt;</code> Web Component is loaded with a single <code>&lt;script&gt;</code> tag
+      and works immediately.
+    </p>
+
+    <div class="info-box" role="note" aria-label="Integration instructions">
+      <h3>⚡ One-line integration</h3>
+      <p>Add these two lines before <code>&lt;/body&gt;</code> on any existing website:</p>
+      <pre><code>&lt;script src="/module/db-assistant.js" defer&gt;&lt;/script&gt;
+&lt;db-assistant
+  lang="am"
+  api="http://localhost:3000/api"
+  content="/data/content.json"&gt;
+&lt;/db-assistant&gt;</code></pre>
+    </div>
+
+    <div class="demo-area" aria-labelledby="demo-heading">
+      <h3 id="demo-heading">Try the assistant</h3>
+      <p>Use the golden 🌉 button in the bottom-right corner to open the assistant. Try:</p>
+      <ul style="margin:12px 0 20px 24px;">
+        <li>Asking "What is shaping the future of VA work?" in <strong>Amharic</strong></li>
+        <li>Clicking <strong>Guide Me</strong> to navigate this page by voice</li>
+        <li>Browsing the <strong>Jobs</strong> tab for Ethiopian tech jobs</li>
+        <li>Pressing <strong>Tab</strong> key only — everything is keyboard-accessible</li>
+      </ul>
+
+      <label for="lang-picker">Change assistant language:</label>
+      <select id="lang-picker" aria-label="Change assistant language">
+        <option value="am">አማርኛ (Amharic)</option>
+        <option value="en" selected>English</option>
+        <option value="ti">ትግርኛ (Tigrinya)</option>
+        <option value="om">Afaan Oromoo</option>
+        <option value="so">Soomaali</option>
+        <option value="ar">العربية (Arabic)</option>
+      </select>
+
+      <label for="sample-input">Sample course note (for Guide Me test):</label>
+      <input type="text" id="sample-input" value="ALX Virtual Assistant Program — Module 3" aria-describedby="sample-hint">
+      <span id="sample-hint" style="font-size:0.8rem;color:#666;">This input exists so Guide Me can focus it.</span>
+
+      <button id="open-btn" aria-label="Open BridgeMate assistant">Open Assistant</button>
+    </div>
+
+    <h2>Accessibility features</h2>
+    <ul style="margin-left:24px;">
+      <li><strong>WCAG 2.2 AA</strong> — axe-core clean, zero critical violations</li>
+      <li><strong>Keyboard-only</strong> — Tab, Enter, Escape, Arrow keys</li>
+      <li><strong>Screen reader</strong> — ARIA live regions, role="dialog", role="log"</li>
+      <li><strong>Focus ring</strong> — 3px solid #f5a300 (Savanna gold) on all interactive elements</li>
+      <li><strong>200% zoom</strong> — no horizontal scroll at 320px viewport</li>
+      <li><strong>6 languages</strong> — including RTL Arabic</li>
+      <li><strong>Offline</strong> — BM25 search works with zero internet</li>
+    </ul>
+
+    <h2>Links</h2>
+    <ul style="margin-left:24px;">
+      <li><a href="/demo/helper.html">Human tutor queue dashboard →</a></li>
+      <li><a href="/savanna/pages/concept-with-navigation.html">ALX Savanna course page →</a></li>
+      <li><a href="/savanna/pages/jobs.html">Jobs board →</a></li>
+      <li><a href="http://localhost:3000/docs" target="_blank" rel="noopener noreferrer">API documentation (Swagger) →</a></li>
+    </ul>
+  </main>
+
+  <footer role="contentinfo">
+    <p>BridgeMate — ALX Ethiopia Digital Bridge Accessibility Hackathon, Track 3 &bull; MIT License</p>
+    <p>Built for WCAG 2.2 Level AA · Ethiopian Proclamation No. 1156/2019 · Proclamation No. 568/2008</p>
+  </footer>
+
+  <!-- The entire assistant: one script tag, one custom element -->
+  <script src="/module/db-assistant.js" defer></script>
+  <db-assistant
+    lang="en"
+    api="http://localhost:3000/api"
+    content="/data/content.json"
+    id="bm">
+  </db-assistant>
+
+  <script>
+    // Wire language picker to assistant attribute
+    document.getElementById('lang-picker').addEventListener('change', function() {
+      document.getElementById('bm').setAttribute('lang', this.value);
+    });
+    // Wire open button to dispatch click on FAB (via event)
+    document.getElementById('open-btn').addEventListener('click', function() {
+      const bm = document.getElementById('bm');
+      bm.dispatchEvent(new CustomEvent('bm-open'));
+      // Also find and click the FAB inside shadow DOM
+      const shadow = bm.shadowRoot;
+      if (shadow) {
+        const fab = shadow.getElementById('fab');
+        if (fab) fab.click();
+      }
+    });
+  </script>
+</body>
+</html>
