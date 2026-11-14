@@ -1,0 +1,107 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --border: #E2E8F0;
+  --input: #E2E8F0;
+  --ring: #1D4ED8;
+  --primary: #1D4ED8;
+  --primary-foreground: #FFFFFF;
+  --muted: #F1F5F9;
+  --muted-foreground: #475569;
+
+  /* Custom Emil Kowalski & Vengence Motion Easings */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+[data-high-contrast="true"] {
+  --background: #000000;
+  --foreground: #FFFFFF;
+  --card: #090D16;
+  --card-foreground: #FFFFFF;
+  --border: #FFFFFF;
+  --input: #FFFFFF;
+  --ring: #FACC15;
+  --primary: #FACC15;
+  --primary-foreground: #000000;
+  --muted: #1E293B;
+  --muted-foreground: #E2E8F0;
+}
+
+/* Dynamic Font Scaling (100% to 200%) per WCAG 2.2 AA Reflow & Text Spacing */
+html[data-font-scale="100"] {
+  font-size: 16px;
+}
+html[data-font-scale="125"] {
+  font-size: 20px;
+}
+html[data-font-scale="150"] {
+  font-size: 24px;
+}
+html[data-font-scale="200"] {
+  font-size: 32px;
+}
+
+/* Dyslexia-friendly typography override */
+[data-dyslexic="true"] {
+  font-family: 'OpenDyslexic', 'Comic Sans MS', sans-serif !important;
+  letter-spacing: 0.05em;
+  word-spacing: 0.1em;
+}
+
+/* Ethiopic / Amharic line-height preservation */
+[lang="am"], .font-ethiopic {
+  line-height: 1.7;
+  word-break: break-word;
+}
+
+/* Accessibility Focus Ring WCAG 2.2 Level AA (3px solid high contrast blue/yellow outline) */
+*:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Tactile micro-physics per Emil Kowalski: button scale on press */
+button:active:not(:disabled),
+[role="button"]:active:not([aria-disabled="true"]) {
+  transform: scale(0.97);
+  transition: transform 120ms var(--ease-out);
+}
+
+/* Smooth interactive transitions */
+.interactive-card {
+  transition: transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out), border-color 200ms var(--ease-out);
+}
+.interactive-card:hover {
+  transform: translateY(-2px);
+}
+.interactive-card:active {
+  transform: translateY(0) scale(0.99);
+}
+
+/* Prefers Reduced Motion override */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  min-height: 100vh;
+  margin: 0;
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}

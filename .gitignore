@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Next.js build output
+.next/
+out/
+build/
+dist/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Testing & Coverage
+coverage/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# TypeScript build info
+*.tsbuildinfo
+next-env.d.ts
+
+# Agent logs & temporary previews
+.agents/
+landing-preview*.png
