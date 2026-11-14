@@ -345,7 +345,7 @@ export function ChatContainer() {
 
       {/* Input Form */}
       <div className="p-3 sm:p-4 border-t border-[var(--border-default)] bg-[var(--bg-surface)]">
-        <ChatInput onSend={handleSendMessage} disabled={isLoading} />
+        <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} language={language as any} />
       </div>
     </div>
   );

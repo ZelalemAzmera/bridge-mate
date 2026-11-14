@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import LowBandwidthPage from '@/app/low-bandwidth/page';
+import LowBandwidthPage from '@/app/(dashboard)/low-bandwidth/page';
 
 function extractText(node: any): string {
   if (!node) return '';

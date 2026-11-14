@@ -27,11 +27,20 @@
 
 'use strict';
 
-const express = require('express');
-const { JSDOM } = require('jsdom');
-const { Readability } = require('@mozilla/readability');
+// Safe dynamic requires so Next.js webpack compilation doesn't fail on standalone microservice packages
+const express = (() => {
+  try { return eval('require')('express'); } catch (_) { return null; }
+})();
+const JSDOM = (() => {
+  try { return eval('require')('jsdom').JSDOM; } catch (_) { return null; }
+})();
+const Readability = (() => {
+  try { return eval('require')('@mozilla/readability').Readability; } catch (_) { return null; }
+})();
 
-const router = express.Router();
+const router = (express && typeof express.Router === 'function')
+  ? express.Router()
+  : { get: () => {}, post: () => {}, use: () => {} };
 
 // ── Constants (ported from crawl4ai/config.py) ────────────────────────────────
 const SCRAPER_VERSION = '2.0.0';
@@ -434,9 +443,8 @@ async function scrapeViaLocalFastPath(targetUrl) {
       }))
       .filter(item => item.label.length > 1);
 
-    // Run Readability for clean article extraction
-    const reader = new Readability(doc);
-    const parsed = reader.parse();
+    // Run Readability for clean article extraction if available
+    const parsed = (Readability && doc) ? new Readability(doc).parse() : null;
 
     return {
       engine: 'local-fast-path-v2',
@@ -513,8 +521,7 @@ async function scrapeViaReadability(targetUrl) {
     }))
     .filter(item => item.label.length > 1);
 
-  const reader = new Readability(doc);
-  const parsed = reader.parse();
+  const parsed = (Readability && doc) ? new Readability(doc).parse() : null;
 
   return {
     engine: 'mozilla-readability-local',
