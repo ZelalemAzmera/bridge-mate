@@ -25,28 +25,40 @@ describe('Track 3: RTL (Somali / Arabic) & Regional Ethiopian Languages', () => 
       result.current.setLanguage('om');
     });
     expect(result.current.language).toBe('om');
+    expect(result.current.isRtl).toBe(false);
 
     act(() => {
       result.current.setLanguage('ti');
     });
     expect(result.current.language).toBe('ti');
+    expect(result.current.isRtl).toBe(false);
 
     act(() => {
       result.current.setLanguage('so');
     });
     expect(result.current.language).toBe('so');
-    expect(result.current.isRtl).toBe(true);
+    expect(result.current.isRtl).toBe(false);
   });
 
-  it('sets dir="rtl" on document.documentElement when Somali or RTL is activated', () => {
+  it('maintains LTR direction when Somali is selected and sets dir="rtl" only when RTL toggle is clicked', () => {
     const { result } = renderHook(() => useAccessibility());
 
     act(() => {
       result.current.setLanguage('so');
     });
 
-    expect(document.documentElement.getAttribute('dir')).toBe('rtl');
+    // Somali remains Left-to-Right by default
+    expect(document.documentElement.getAttribute('dir')).toBe('ltr');
     expect(document.documentElement.getAttribute('lang')).toBe('so');
+    expect(result.current.isRtl).toBe(false);
+
+    // RTL is activated strictly when the user clicks the RTL toggle button
+    act(() => {
+      result.current.toggleRtl();
+    });
+
+    expect(result.current.isRtl).toBe(true);
+    expect(document.documentElement.getAttribute('dir')).toBe('rtl');
 
     act(() => {
       result.current.setLanguage('en');

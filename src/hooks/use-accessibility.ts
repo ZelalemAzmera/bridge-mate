@@ -43,6 +43,11 @@ export function useAccessibility() {
           if (parsed.highContrast && !parsed.theme) {
             parsed.theme = 'high-contrast';
           }
+          // Sanitize: clear legacy auto-triggered RTL from previous sessions.
+          // RTL is strictly learner-controlled via the Accessibility Tools "RTL" toggle.
+          if (parsed.isRtl && parsed.language !== 'ar') {
+            parsed.isRtl = false;
+          }
           setSettings((prev) => ({ ...prev, ...parsed }));
         }
       }
@@ -67,8 +72,8 @@ export function useAccessibility() {
     root.setAttribute('data-dyslexic', settings.dyslexicFont ? 'true' : 'false');
     root.setAttribute('lang', settings.language);
 
-    // RTL Handling for Somali / Arabic script per Track 3 spec
-    const shouldBeRtl = settings.isRtl || settings.language === 'so' || settings.language === 'ar';
+    // RTL layout is strictly learner-controlled via the Accessibility Tools "RTL" toggle
+    const shouldBeRtl = Boolean(settings.isRtl);
     root.setAttribute('dir', shouldBeRtl ? 'rtl' : 'ltr');
   }, [settings, isMounted]);
 
@@ -141,7 +146,6 @@ export function useAccessibility() {
     setSettings((prev) => ({
       ...prev,
       language: lang,
-      isRtl: lang === 'so' || lang === 'ar' ? true : prev.isRtl,
     }));
   }, []);
 
