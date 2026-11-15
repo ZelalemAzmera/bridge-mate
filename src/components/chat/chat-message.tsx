@@ -17,6 +17,95 @@ export interface ChatMessageProps {
   legalAnchor?: string;
 }
 
+const MESSAGE_I18N: Record<
+  SupportedLanguage,
+  {
+    readAloud: string;
+    stop: string;
+    readAloudAria: string;
+    stopAria: string;
+    simpleModeOn: string;
+    simpleModeOff: string;
+    simpleModeAria: string;
+    verifiedReferences: string;
+    assistantLabel: string;
+    userLabel: string;
+  }
+> = {
+  en: {
+    readAloud: 'Read Aloud',
+    stop: 'Stop',
+    readAloudAria: 'Read aloud response',
+    stopAria: 'Stop reading aloud',
+    simpleModeOn: 'Simple Mode: On',
+    simpleModeOff: 'Simple Mode',
+    simpleModeAria: 'Toggle plain-language simple mode',
+    verifiedReferences: 'Verified References:',
+    assistantLabel: 'AI Tutor Response',
+    userLabel: 'Learner message',
+  },
+  am: {
+    readAloud: 'አንብብ',
+    stop: 'አቁም',
+    readAloudAria: 'መልዕክቱን በድምፅ አንብብ',
+    stopAria: 'ድምፅ ንባብ አቁም',
+    simpleModeOn: 'ቀላል ሁነታ፡ በርቷል',
+    simpleModeOff: 'ቀላል ሁነታ',
+    simpleModeAria: 'ቀላል የአነባበብ ሁነታ ቀይር',
+    verifiedReferences: 'የተረጋገጡ ምንጮች፡',
+    assistantLabel: 'የትምህርት ረዳት ምላሽ',
+    userLabel: 'የተማሪው መልዕክት',
+  },
+  om: {
+    readAloud: 'Sagalee',
+    stop: 'Dhaabi',
+    readAloudAria: 'Ergaa sagaleen dubbisi',
+    stopAria: 'Dubbisuu dhaabi',
+    simpleModeOn: 'Haala Salphaa: Hojjata',
+    simpleModeOff: 'Haala Salphaa',
+    simpleModeAria: 'Gara haala salphaatti jijjiiri',
+    verifiedReferences: "Wabiiwwan Mirkanaa'an:",
+    assistantLabel: 'Deebii Gargaaraa Barnootaa',
+    userLabel: 'Ergaa Barataa',
+  },
+  ti: {
+    readAloud: 'ድምጺ',
+    stop: 'ኣቋርጽ',
+    readAloudAria: 'መልእኽቲ ብድምጺ ኣንብብ',
+    stopAria: 'ምንባብ ኣቋርጽ',
+    simpleModeOn: 'ቀሊል ኣገባብ፡ በርሀ',
+    simpleModeOff: 'ቀሊል ኣገባብ',
+    simpleModeAria: 'ናብ ቀሊል ኣገባብ ቀይር',
+    verifiedReferences: 'ዝተረጋገጹ ምንጭታት፡',
+    assistantLabel: 'ናይ ትምህርቲ ረዳኢ ምላሽ',
+    userLabel: 'ናይ ተምሃራይ መልእኽቲ',
+  },
+  so: {
+    readAloud: 'Cod',
+    stop: 'Jooji',
+    readAloudAria: 'Farriinta kor ugu akhri',
+    stopAria: 'Jooji akhriska',
+    simpleModeOn: 'Hab Fudud: Wuu Furan Yahay',
+    simpleModeOff: 'Hab Fudud',
+    simpleModeAria: 'U beddel habka fudud',
+    verifiedReferences: 'Xogaha La Xaqiijiyay:',
+    assistantLabel: 'Jawaabta Kaaliyaha AI',
+    userLabel: 'Farriinta Baraha',
+  },
+  ar: {
+    readAloud: 'قراءة',
+    stop: 'إيقاف',
+    readAloudAria: 'قراءة الرد بصوت عالٍ',
+    stopAria: 'إيقاف القراءة الصوتية',
+    simpleModeOn: 'الوضع المبسط: مفعل',
+    simpleModeOff: 'الوضع المبسط',
+    simpleModeAria: 'تبديل الوضع المبسط',
+    verifiedReferences: 'المراجع المعتمدة:',
+    assistantLabel: 'رد مساعد الذكاء الاصطناعي',
+    userLabel: 'رسالة المتعلم',
+  },
+};
+
 export function ChatMessage({
   role,
   content,
@@ -28,6 +117,7 @@ export function ChatMessage({
   const { speak, stop, isSpeaking, isSupported } = useSpeechSynthesis();
   const [simpleMode, setSimpleMode] = useState(false);
   const isUser = role === 'user';
+  const i18n = MESSAGE_I18N[language] || MESSAGE_I18N.en;
 
   const handleReadAloud = () => {
     if (isSpeaking) {
@@ -40,7 +130,7 @@ export function ChatMessage({
   if (isUser) {
     return (
       <article
-        aria-label={language === 'am' ? 'የተማሪው መልዕክት' : 'Learner message'}
+        aria-label={i18n.userLabel}
         className="flex justify-end my-3"
       >
         <div className="flex items-start gap-3 max-w-[85%] md:max-w-[75%]">
@@ -61,7 +151,7 @@ export function ChatMessage({
   // Assistant Response: Clean white elevated card (border-radius: 12px, padding: 20px, border: 1px solid var(--border-default))
   return (
     <article
-      aria-label={language === 'am' ? 'የትምህርት ረዳት ምላሽ' : 'AI Tutor Response'}
+      aria-label={i18n.assistantLabel}
       className="my-4 rounded-[12px] p-5 border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-xs transition-colors"
     >
       {/* Top Header Bar */}
@@ -86,21 +176,17 @@ export function ChatMessage({
                   ? 'border-red-300 bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800'
                   : 'border-[var(--border-default)] bg-[var(--bg-subtle)] text-[var(--text-primary)] hover:bg-[var(--bg-canvas)]'
               }`}
-              aria-label={
-                isSpeaking
-                  ? language === 'am' ? 'ድምፅ ንባብ አቁም' : 'Stop reading aloud'
-                  : language === 'am' ? 'መልዕክቱን በድምፅ አንብብ' : 'Read aloud response'
-              }
+              aria-label={isSpeaking ? i18n.stopAria : i18n.readAloudAria}
             >
               {isSpeaking ? (
                 <>
                   <VolumeX className="w-4 h-4 text-red-600 animate-pulse" aria-hidden="true" />
-                  <span>{language === 'am' ? 'አቁም (Stop)' : 'Stop'}</span>
+                  <span>{i18n.stop}</span>
                 </>
               ) : (
                 <>
                   <Volume2 className="w-4 h-4 text-[var(--brand-primary)]" aria-hidden="true" />
-                  <span>{language === 'am' ? 'ድምፅ (Read Aloud)' : 'Read Aloud'}</span>
+                  <span>{i18n.readAloud}</span>
                 </>
               )}
             </button>
@@ -116,17 +202,11 @@ export function ChatMessage({
                 ? 'border-[var(--brand-primary)] bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] font-bold'
                 : 'border-[var(--border-default)] bg-[var(--bg-subtle)] text-[var(--text-primary)] hover:bg-[var(--bg-canvas)]'
             }`}
-            aria-label={
-              language === 'am'
-                ? 'ቀላል የአነባበብ ሁነታ ቀይር (Simple Mode)'
-                : 'Toggle plain-language simple mode'
-            }
+            aria-label={i18n.simpleModeAria}
           >
             <Sparkles className="w-4 h-4 text-[var(--brand-primary)]" aria-hidden="true" />
             <span>
-              {simpleMode
-                ? language === 'am' ? 'ቀላል ሁነታ (በነጥቦች)' : 'Simple Mode: On'
-                : language === 'am' ? 'ቀላል ሁነታ (Simple Mode)' : 'Simple Mode'}
+              {simpleMode ? i18n.simpleModeOn : i18n.simpleModeOff}
             </span>
           </button>
         </div>
@@ -142,7 +222,7 @@ export function ChatMessage({
         <div className="mt-4 pt-3 border-t border-[var(--border-default)] flex flex-wrap items-center gap-2 text-xs text-[var(--text-secondary)]">
           <span className="font-bold flex items-center gap-1">
             <FileText className="w-3.5 h-3.5 text-[var(--brand-primary)]" aria-hidden="true" />
-            <span>{language === 'am' ? 'የተረጋገጡ ምንጮች፡' : 'Verified References:'}</span>
+            <span>{i18n.verifiedReferences}</span>
           </span>
           {citations.map((c) => (
             <span

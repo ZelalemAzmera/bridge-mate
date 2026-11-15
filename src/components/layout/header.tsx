@@ -120,7 +120,7 @@ export function Header() {
 
   return (
     <header className="bg-[var(--bg-canvas)]/95 backdrop-blur-md border-b border-[var(--border-default)] sticky top-[41px] z-40 transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4 flex-nowrap">
         {/* Brand Logo & Tagline */}
         <div className="flex items-center gap-6 shrink-0">
           <Link
@@ -176,8 +176,8 @@ export function Header() {
           </nav>
         </div>
 
-        {/* Right Actions: Live Help Button, User Persona / Profile, Mobile Toggle */}
-        <div className="flex items-center gap-2.5 shrink-0">
+        {/* Right Actions: User Persona / Profile (Top Right Corner) & Mobile Toggle */}
+        <div className="flex items-center gap-2.5 shrink-0 ml-auto">
           {/* User Persona Profile Pill / Sign In */}
           {currentUser ? (
             <div className="relative">
@@ -225,25 +225,6 @@ export function Header() {
               <span>{language === 'am' ? 'ግባ' : 'Sign In'}</span>
             </Link>
           )}
-
-          {/* High-Priority "Live Human Help (Alt+H)" Button in Warm Ochre Accent */}
-          <Link
-            href="/support"
-            className="min-h-[38px] px-3.5 py-1.5 rounded-lg bg-[var(--brand-accent)] text-[var(--brand-primary)] border border-[#C88E45] hover:bg-[#D49E55] transition-all shadow-xs flex items-center gap-2 text-xs font-bold shrink-0 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
-            aria-label={
-              language === 'am'
-                ? 'የሰው ድጋፍ (አቋራጭ Alt+H)'
-                : 'Live Human Help (Keyboard Shortcut Alt+H)'
-            }
-          >
-            <Headphones className="w-3.5 h-3.5 text-[var(--brand-primary)]" aria-hidden="true" />
-            <span className="hidden sm:inline">
-              {language === 'am' ? 'የሰው ድጋፍ' : 'Live Help'}
-            </span>
-            <kbd className="hidden md:inline text-[9px] font-mono px-1 py-0.5 rounded bg-[var(--brand-primary)] text-white font-bold">
-              Alt+H
-            </kbd>
-          </Link>
 
           {/* Mobile Menu Toggle */}
           <button

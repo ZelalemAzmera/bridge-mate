@@ -40,7 +40,7 @@ const Readability = (() => {
 
 const router = (express && typeof express.Router === 'function')
   ? express.Router()
-  : { get: () => {}, post: () => {}, use: () => {} };
+  : { get: () => { }, post: () => { }, use: () => { } };
 
 // ── Constants (ported from crawl4ai/config.py) ────────────────────────────────
 const SCRAPER_VERSION = '2.0.0';
@@ -63,7 +63,7 @@ const BOILERPLATE_PATTERNS = [
 ];
 
 const NAV_FOOTER_TAGS = ['nav', 'footer', 'header', 'aside', '.sidebar', '.ad', '.advertisement',
-                          '.cookie', '.newsletter', '.social-share', '.related-posts'];
+  '.cookie', '.newsletter', '.social-share', '.related-posts'];
 
 // ── Built-in Offline/2G Fallback Corpus ──────────────────────────────────────
 const OFFLINE_KNOWLEDGE_BASE = [

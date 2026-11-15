@@ -89,6 +89,8 @@ Preferred Language: ${language}
     prompt += `\n\nCRITICAL USER SETTING: The user has explicitly selected Tigrinya (ትግርኛ). You must reply in natural, polite Tigrinya.\n`;
   } else if (language === 'so') {
     prompt += `\n\nCRITICAL USER SETTING: The user has explicitly selected Somali (Soomaali). You must reply in natural, polite Somali.\n`;
+  } else if (language === 'ar') {
+    prompt += `\n\nCRITICAL USER SETTING: The user has explicitly selected Arabic (العربية). You must reply in natural, polite, formal Arabic.\n`;
   } else if (language === 'en') {
     prompt += `\n\nCRITICAL USER SETTING: The user has explicitly selected English. You must reply in clear, plain English.\n`;
   }
