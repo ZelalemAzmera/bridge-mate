@@ -106,9 +106,14 @@ export default async function LowBandwidthPage(props: {
             <h1 style={{ fontSize: '1.25rem', fontWeight: 'bold', margin: '0' }}>
               BridgeMate (ብሪጅሜት) — ዝቅተኛ ባንድዊድዝ (2G Mode)
             </h1>
-            <Link href="/" style={{ fontSize: '0.8rem', color: '#0055AA', fontWeight: 'bold' }}>
-              ወደ ሙሉ ድረ-ገጽ (Full Dashboard) &rarr;
-            </Link>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <Link href="/telegram" style={{ fontSize: '0.8rem', color: '#0055AA', fontWeight: 'bold' }}>
+                &larr; Telegram &amp; 2G Hub
+              </Link>
+              <Link href="/" style={{ fontSize: '0.8rem', color: '#0055AA', fontWeight: 'bold' }}>
+                ወደ ሙሉ ድረ-ገጽ (Full Dashboard) &rarr;
+              </Link>
+            </div>
           </div>
           <p style={{ fontSize: '0.8rem', color: '#444', margin: '4px 0 0 0' }}>
             ይህ ገጽ ለደካማ ኢንተርኔት (2G/3G) እና ለቀላል የጽሑፍ አጠቃቀም የተመቻቸ ነው (&lt;15 KB)።

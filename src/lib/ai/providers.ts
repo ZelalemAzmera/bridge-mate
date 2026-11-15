@@ -27,9 +27,9 @@ export function getAIProvider(options: AIProviderOptions = {}): {
     const lang = options.language || 'en';
     const isRegional = ['am', 'om', 'ti', 'so'].includes(lang);
 
-    // Amharic and regional languages require 70B parameters for deep Ge'ez script understanding
+    // High-capacity multilingual 120B model on Groq for deep Ge'ez & regional language fluency
     if (isRegional || options.speed === 'accurate') {
-      const modelId = 'llama-3.3-70b-versatile';
+      const modelId = 'openai/gpt-oss-120b';
       return {
         provider: 'groq',
         model: groq(modelId),
@@ -37,8 +37,8 @@ export function getAIProvider(options: AIProviderOptions = {}): {
       };
     }
 
-    // Fast English conversational responses (800+ tokens/sec)
-    const modelId = 'llama-3.1-8b-instant';
+    // Ultra-fast conversational responses on Groq
+    const modelId = 'openai/gpt-oss-20b';
     return {
       provider: 'groq',
       model: groq(modelId),

@@ -77,36 +77,40 @@ export async function POST(req: NextRequest) {
       encodedCitations = '[]';
     }
 
-    // 4. Live AI Streaming (Groq Llama 3.3 70B / Gemini / OpenAI)
+    // 4. Live AI Streaming (Groq GPT-OSS 120B / Gemini / OpenAI)
     if (isLiveAIConfigured()) {
-      const { model, modelId, provider } = getAIProvider({ language: userLanguage });
-      if (model) {
-        console.log(`[BridgeMate AI] Routing chat to ${provider} model: ${modelId} for language: ${userLanguage}`);
-        const result = streamText({
-          model,
-          system: systemInstruction,
-          messages: messages.map((m: any) => ({
-            role: m.role,
-            content: m.content,
-          })),
-        });
+      try {
+        const { model, modelId, provider } = getAIProvider({ language: userLanguage });
+        if (model) {
+          console.log(`[BridgeMate AI] Routing chat to ${provider} model: ${modelId} for language: ${userLanguage}`);
+          const result = streamText({
+            model,
+            system: systemInstruction,
+            messages: messages.map((m: any) => ({
+              role: m.role,
+              content: m.content,
+            })),
+          });
 
-        return result.toDataStreamResponse({
-          headers: {
-            'x-citations': encodedCitations,
-            'x-model-id': modelId,
-            'x-provider': provider,
-          },
-        });
+          return result.toTextStreamResponse({
+            headers: {
+              'x-citations': encodedCitations,
+              'x-model-id': modelId,
+              'x-provider': provider,
+            },
+          });
+        }
+      } catch (streamError: any) {
+        console.warn('[BridgeMate AI] Live provider stream encountered an issue, falling back to grounded offline engine:', streamError?.message);
       }
     }
 
     // 5. Offline Resilient Mock Streaming Response across Supported Languages
     const lang = userLanguage === 'om' ? 'om' :
-                 userLanguage === 'ti' ? 'ti' :
-                 userLanguage === 'so' ? 'so' :
-                 userLanguage === 'ar' ? 'ar' :
-                 (userLanguage === 'am' || /[\u1200-\u137F]/.test(latestMessage)) ? 'am' : 'en';
+      userLanguage === 'ti' ? 'ti' :
+        userLanguage === 'so' ? 'so' :
+          userLanguage === 'ar' ? 'ar' :
+            (userLanguage === 'am' || /[\u1200-\u137F]/.test(latestMessage)) ? 'am' : 'en';
 
     let mockResponse = '';
 

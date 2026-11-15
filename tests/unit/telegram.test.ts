@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 import { TelegramService, type TelegramUpdate } from '@/lib/telegram/telegram.service';
 import { POST as webhookPost, GET as webhookGet } from '@/app/api/telegram/webhook/route';
+import { GET as linkTokenGet } from '@/app/api/telegram/link-token/route';
 
 describe('Track 3: Telegram Bot Assistant & Webhook Engine', () => {
   beforeEach(() => {
@@ -179,5 +180,16 @@ describe('Track 3: Telegram Bot Assistant & Webhook Engine', () => {
     expect(greetingResult.handled).toBe(true);
     expect(greetingResult.replyText).toContain('Abebe');
     expect(greetingResult.replyText).toContain('Welcome to BridgeMate');
+  });
+
+  it('generates a personalized deep link token via GET /api/telegram/link-token', async () => {
+    const req = new NextRequest('http://localhost:3000/api/telegram/link-token');
+    const res = await linkTokenGet(req);
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.success).toBe(true);
+    expect(json.token).toMatch(/^link_/);
+    expect(json.deepLink).toContain('https://t.me/');
+    expect(json.deepLink).toContain('?start=link_');
   });
 });

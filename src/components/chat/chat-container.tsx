@@ -203,7 +203,7 @@ export function ChatContainer() {
           setCurrentUser(data.user);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const languageOptions = [
@@ -352,20 +352,20 @@ export function ChatContainer() {
         prev.map((msg) =>
           msg.id === assistantMessageId
             ? {
-                ...msg,
-                content:
-                  chatLanguage === 'am'
-                    ? 'ይቅርታ፣ ምላሽ በማመንጨት ላይ ስህተት ተፈጥሯል። እባክዎ እንደገና ይሞክሩ።'
-                    : 'I apologize, but an error occurred while generating the response. Please try again.',
-                citations: [
-                  {
-                    id: 'cite-rag',
-                    sourceTitle: TUTOR_I18N[chatLanguage]?.citationTitle || 'BridgeMate Verification',
-                    excerpt: 'Grounding Verification: 99.4% confidence',
-                    similarity: 0.99,
-                  },
-                ],
-              }
+              ...msg,
+              content:
+                chatLanguage === 'am'
+                  ? 'ይቅርታ፣ ምላሽ በማመንጨት ላይ ስህተት ተፈጥሯል። እባክዎ እንደገና ይሞክሩ።'
+                  : 'I apologize, but an error occurred while generating the response. Please try again.',
+              citations: [
+                {
+                  id: 'cite-rag',
+                  sourceTitle: TUTOR_I18N[chatLanguage]?.citationTitle || 'BridgeMate Verification',
+                  excerpt: 'Grounding Verification: 99.4% confidence',
+                  similarity: 0.99,
+                },
+              ],
+            }
             : msg
         )
       );
