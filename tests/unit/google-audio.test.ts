@@ -21,6 +21,19 @@ describe('Google AI Studio Audio (TTS & STT) Integration', () => {
     expect(res.status).toBe(400);
   });
 
+  it('GET /api/tts redirects to direct stream when serverless proxy fetch fails', async () => {
+    const originalFetch = global.fetch;
+    global.fetch = vi.fn().mockRejectedValueOnce(new Error('Vercel IP Blocked'));
+
+    const req = new NextRequest('http://localhost:3000/api/tts?lang=am&text=ፈተና');
+    const res = await getTts(req);
+
+    expect(res.status).toBe(307);
+    expect(res.headers.get('location')).toContain('translate.google.com/translate_tts');
+
+    global.fetch = originalFetch;
+  });
+
   it('POST /api/transcribe accepts audio payload and returns transcription', async () => {
     const req = new NextRequest('http://localhost:3000/api/transcribe', {
       method: 'POST',

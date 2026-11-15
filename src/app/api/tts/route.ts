@@ -30,6 +30,7 @@ function pcmToWav(pcmBuffer: Buffer, sampleRate = 24000, numChannels = 1, bitsPe
 
 /**
  * Attempts to generate natural, expressive speech via Google AI Studio's Gemini 2.0 Flash Audio output.
+ * Tries primary and experimental checkpoints for maximum availability.
  */
 async function generateGoogleAIStudioAudio(text: string, lang: string, apiKey: string): Promise<Buffer | null> {
   const langNames: Record<string, string> = {
@@ -44,51 +45,60 @@ async function generateGoogleAIStudioAudio(text: string, lang: string, apiKey: s
 
   const prompt = `You are a supportive, warm accessibility learning tutor for Ethiopian students. Please read aloud the following text in ${languageName} with clear articulation, natural breathing, and a warm tone. Speak ONLY the exact words provided without preamble, commentary, or quotes:\n\n"${text}"`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  const candidateModels = ['gemini-2.0-flash', 'gemini-2.0-flash-exp'];
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [
-        {
-          parts: [{ text: prompt }],
-        },
-      ],
-      generationConfig: {
-        responseModalities: ['AUDIO'],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: {
-              voiceName: 'Puck', // Natural, warm conversational voice
+  for (const model of candidateModels) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [{ text: prompt }],
+            },
+          ],
+          generationConfig: {
+            responseModalities: ['AUDIO'],
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: {
+                  voiceName: 'Puck', // Natural, warm conversational voice
+                },
+              },
             },
           },
-        },
-      },
-    }),
-    signal: AbortSignal.timeout(12000),
-  });
+        }),
+        signal: AbortSignal.timeout(8000),
+      });
 
-  if (!response.ok) {
-    console.warn(`[Google AI Studio TTS] Failed with status ${response.status}`);
-    return null;
+      if (!response.ok) {
+        continue;
+      }
+
+      const data = await response.json();
+      const part = data.candidates?.[0]?.content?.parts?.[0];
+      if (!part || !part.inlineData || !part.inlineData.data) {
+        continue;
+      }
+
+      const rawBytes = Buffer.from(part.inlineData.data, 'base64');
+      const mimeType = part.inlineData.mimeType || '';
+
+      // If Gemini returns raw PCM, prepend standard WAV header
+      if (mimeType.includes('pcm') || !mimeType.includes('wav')) {
+        return pcmToWav(rawBytes, 24000);
+      }
+
+      return rawBytes;
+    } catch {
+      // Continue to next candidate model or fallback
+    }
   }
 
-  const data = await response.json();
-  const part = data.candidates?.[0]?.content?.parts?.[0];
-  if (!part || !part.inlineData || !part.inlineData.data) {
-    return null;
-  }
-
-  const rawBytes = Buffer.from(part.inlineData.data, 'base64');
-  const mimeType = part.inlineData.mimeType || '';
-
-  // If Gemini returns raw PCM, prepend standard WAV header
-  if (mimeType.includes('pcm') || !mimeType.includes('wav')) {
-    return pcmToWav(rawBytes, 24000);
-  }
-
-  return rawBytes;
+  return null;
 }
 
 export async function GET(req: NextRequest) {
@@ -102,10 +112,19 @@ export async function GET(req: NextRequest) {
     }
 
     // Truncate to first 300 chars for responsive phrase TTS
-    const sanitizedText = text.slice(0, 300).trim();
+    const sanitizedText = text
+      .replace(/\[Source:.*?\]/g, '')
+      .replace(/[*_#`~>]/g, '')
+      .trim()
+      .slice(0, 300);
 
     // 1. TIER 1: Google AI Studio Gemini 2.0 Flash Audio (if API key is configured)
-    const googleApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY;
+    const googleApiKey =
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+      process.env.GEMINI_API_KEY ||
+      process.env.GOOGLE_API_KEY ||
+      process.env.NEXT_PUBLIC_GOOGLE_AI_KEY;
+
     if (googleApiKey && !googleApiKey.toLowerCase().includes('mock') && googleApiKey.trim() !== '') {
       try {
         const studioAudio = await generateGoogleAIStudioAudio(sanitizedText, lang, googleApiKey);
@@ -123,32 +142,43 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 2. TIER 2: Fast, Zero-Key Google Translate Edge Stream Fallback
+    // 2. TIER 2: Fast, Zero-Key Google Translate Edge Stream
     const ttsLang = lang === 'en' ? 'en' : 'am';
     const googleTtsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${ttsLang}&q=${encodeURIComponent(sanitizedText)}`;
 
-    const response = await fetch(googleTtsUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-      },
-      signal: AbortSignal.timeout(8000),
-    });
+    try {
+      const response = await fetch(googleTtsUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Referer': 'https://translate.google.com/',
+        },
+        signal: AbortSignal.timeout(6000),
+      });
 
-    if (!response.ok) {
-      return new NextResponse('Failed to fetch TTS stream', { status: response.status });
+      if (response.ok) {
+        const audioBuffer = await response.arrayBuffer();
+
+        return new NextResponse(audioBuffer, {
+          headers: {
+            'Content-Type': 'audio/mpeg',
+            'Cache-Control': 'public, max-age=86400, s-maxage=86400',
+            'X-TTS-Provider': 'google-translate-edge',
+          },
+        });
+      }
+    } catch (err) {
+      console.warn('[TTS Server Edge Fetch Error]:', err);
     }
 
-    const audioBuffer = await response.arrayBuffer();
-
-    return new NextResponse(audioBuffer, {
-      headers: {
-        'Content-Type': 'audio/mpeg',
-        'Cache-Control': 'public, max-age=86400, s-maxage=86400',
-        'X-TTS-Provider': 'google-translate-edge',
-      },
-    });
+    // 3. TIER 3: Client Direct Stream Redirect (bypasses serverless datacenter IP blocks)
+    return NextResponse.redirect(googleTtsUrl, 307);
   } catch (error: any) {
     console.error('[TTS API Error]:', error);
-    return new NextResponse('TTS processing failed', { status: 500 });
+    // Even on server exception, redirect client to public TTS stream so audio never fails silently
+    const { searchParams } = new URL(req.url);
+    const text = searchParams.get('text') || '';
+    const lang = searchParams.get('lang') || 'am';
+    const safeText = encodeURIComponent(text.slice(0, 200));
+    return NextResponse.redirect(`https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${lang}&q=${safeText}`, 307);
   }
 }

@@ -7,39 +7,48 @@ export const runtime = 'nodejs';
  * Supports Amharic (አማርኛ), Afaan Oromoo, Tigrinya, Somali, Arabic, and English.
  */
 async function transcribeWithGoogleAIStudio(audioBase64: string, mimeType: string, apiKey: string): Promise<string | null> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  const candidateModels = ['gemini-2.0-flash', 'gemini-2.0-flash-exp'];
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [
-        {
-          parts: [
+  for (const model of candidateModels) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
             {
-              inlineData: {
-                mimeType: mimeType || 'audio/webm',
-                data: audioBase64,
-              },
-            },
-            {
-              text: 'Listen to this audio carefully and transcribe what was spoken in its original language (e.g. Amharic, Afaan Oromoo, Tigrinya, Somali, Arabic, or English). Return ONLY the verbatim transcribed text, with zero extra commentary, markdown, or quotation marks.',
+              parts: [
+                {
+                  inlineData: {
+                    mimeType: mimeType || 'audio/webm',
+                    data: audioBase64,
+                  },
+                },
+                {
+                  text: 'Listen to this audio carefully and transcribe what was spoken in its original language (e.g. Amharic, Afaan Oromoo, Tigrinya, Somali, Arabic, or English). Return ONLY the verbatim transcribed text, with zero extra commentary, markdown, or quotation marks.',
+                },
+              ],
             },
           ],
-        },
-      ],
-    }),
-    signal: AbortSignal.timeout(15000),
-  });
+        }),
+        signal: AbortSignal.timeout(15000),
+      });
 
-  if (!response.ok) {
-    console.warn(`[Google AI Studio STT] Request failed with status ${response.status}`);
-    return null;
+      if (!response.ok) {
+        continue;
+      }
+
+      const data = await response.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+      if (text) return text;
+    } catch {
+      // Try next candidate model
+    }
   }
 
-  const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-  return text || null;
+  return null;
 }
 
 export async function POST(req: NextRequest) {
@@ -74,7 +83,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Check for Google AI Studio API key
-    const googleApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY;
+    const googleApiKey =
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+      process.env.GEMINI_API_KEY ||
+      process.env.GOOGLE_API_KEY ||
+      process.env.NEXT_PUBLIC_GOOGLE_AI_KEY;
 
     if (googleApiKey && !googleApiKey.toLowerCase().includes('mock') && googleApiKey.trim() !== '') {
       try {

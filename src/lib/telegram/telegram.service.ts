@@ -436,7 +436,11 @@ export class TelegramService {
    */
   public static async transcribeTelegramVoice(fileId: string): Promise<string | null> {
     const token = process.env.TELEGRAM_BOT_TOKEN;
-    const googleKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY;
+    const googleKey =
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+      process.env.GEMINI_API_KEY ||
+      process.env.GOOGLE_API_KEY ||
+      process.env.NEXT_PUBLIC_GOOGLE_AI_KEY;
 
     // Sandbox / Mock fallback when in test mode or token missing
     if (!token || token.includes('mock') || !googleKey || googleKey.includes('mock')) {
