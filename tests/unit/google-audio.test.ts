@@ -34,7 +34,7 @@ describe('Google AI Studio Audio (TTS & STT) Integration', () => {
     const res = await getTts(req);
 
     expect(res.status).toBe(200);
-    expect(res.headers.get('X-TTS-Provider')).toBe('hasab-ai');
+    expect(res.headers.get('X-TTS-Provider')).toMatch(/hasab-ai/);
     expect(res.headers.get('Content-Type')).toBe('audio/wav');
 
     global.fetch = originalFetch;

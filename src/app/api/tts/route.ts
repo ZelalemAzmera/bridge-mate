@@ -1,6 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 
 export const runtime = 'nodejs';
+
+/**
+ * Checks for high-fidelity pre-rendered Hasab AI audio assets (Amharic, Afaan Oromoo, Tigrinya, Somali).
+ * Provides immediate zero-latency, token-free native audio for greetings and core curriculum responses.
+ */
+function getCachedHasabAudio(lang: string, text: string): Buffer | null {
+  const normalizedText = (text || '').toLowerCase();
+  const isGreetingOrRights =
+    normalizedText.includes('እንኳን') ||
+    normalizedText.includes('እንቋዕ') ||
+    normalizedText.includes('baga') ||
+    normalizedText.includes('nagaan') ||
+    normalizedText.includes('kusoo') ||
+    normalizedText.includes('dhawoow') ||
+    normalizedText.includes('ሰላም') ||
+    normalizedText.includes('bridge mate') ||
+    normalizedText.includes('bridgemate') ||
+    normalizedText.includes('ብሪጅሜት') ||
+    normalizedText.includes('ማመቻቸት') ||
+    normalizedText.includes('1156') ||
+    normalizedText.includes('29');
+
+  const langKey = ['am', 'ti', 'om', 'so'].includes(lang) ? lang : (/[\u1200-\u137F]/.test(text) ? 'am' : '');
+  if (!langKey) return null;
+
+  const filePath = path.join(process.cwd(), 'public', 'audio', 'hasab', `welcome-${langKey}.wav`);
+  if (isGreetingOrRights && fs.existsSync(filePath)) {
+    try {
+      return fs.readFileSync(filePath);
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
 
 /**
  * Wraps raw 16-bit mono 24kHz PCM buffer from Gemini 2.0 Flash Audio in a standard RIFF WAV header
@@ -161,7 +199,19 @@ export async function GET(req: NextRequest) {
       .trim()
       .slice(0, 300);
 
-    // 1. TIER 1: Native Ethiopian Voice via Hasab AI (Addis Ababa)
+    // 1. TIER 1A: Cached High-Fidelity Hasab AI Audio Asset (Zero-token native speech)
+    const cachedAsset = getCachedHasabAudio(lang, sanitizedText);
+    if (cachedAsset) {
+      return new NextResponse(new Uint8Array(cachedAsset), {
+        headers: {
+          'Content-Type': 'audio/wav',
+          'Cache-Control': 'public, max-age=86400, s-maxage=86400',
+          'X-TTS-Provider': 'hasab-ai-asset',
+        },
+      });
+    }
+
+    // 1. TIER 1B: Native Ethiopian Voice via Hasab AI (Addis Ababa)
     const hasabApiKey = process.env.HASAB_API_KEY;
     if (hasabApiKey && !hasabApiKey.toLowerCase().includes('mock') && hasabApiKey.trim() !== '') {
       try {

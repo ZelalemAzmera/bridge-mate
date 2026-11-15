@@ -122,11 +122,16 @@ export function useSpeechSynthesis() {
         }
       };
 
-      // For Amharic, use high-fidelity Gemini 2.0 / Google streaming with client failover
-      if (isAmharic) {
+      // Local languages: Amharic (am), Tigrinya (ti), Afaan Oromoo (om), Somali (so)
+      const isLocalLang = ['am', 'ti', 'om', 'so'].includes(lang) || /[\u1200-\u137F]/.test(cleanText);
+      const effectiveLang = ['am', 'ti', 'om', 'so'].includes(lang)
+        ? lang
+        : (/[\u1200-\u137F]/.test(cleanText) ? 'am' : 'en');
+
+      if (isLocalLang) {
         const encoded = encodeURIComponent(cleanText);
-        const primaryUrl = `/api/tts?lang=am&text=${encoded}`;
-        const directUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=am&q=${encoded}`;
+        const primaryUrl = `/api/tts?lang=${effectiveLang}&text=${encoded}`;
+        const directUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${effectiveLang === 'en' ? 'en' : 'am'}&q=${encoded}`;
         playWithResilience(primaryUrl, directUrl);
         return;
       }
