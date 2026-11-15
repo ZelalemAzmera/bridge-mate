@@ -36,7 +36,7 @@
       escalateError: 'Could not connect. Please try again.',
       offline: 'You are offline. Message saved — will send when reconnected.',
       loading: 'Loading…', error: 'Something went wrong. Please try again.',
-      noAnswer: 'No answer found for your question.', sources: 'Sources',
+      noAnswer: 'I could not find this in the course. Would you like to talk to a person?', sources: 'Sources',
       step: 'Step {n} of {total}', stepFocus: 'Focused on: {label}',
       announcement: 'Assistant response ready', skipToMain: 'Skip to main content'
     },
@@ -49,7 +49,7 @@
       escalateError: 'ማገናኘት አልተቻለም። እባክዎ እንደገና ሞክሩ።',
       offline: 'ከኢንተርኔት ተቋርጠዋል። መልዕክቱ ተቀምጧል።',
       loading: 'በመጫን ላይ…', error: 'ስህተት ተከስቷል።',
-      noAnswer: 'ለጥያቄዎ መልስ አልተገኘም።', sources: 'ምንጮች',
+      noAnswer: 'በትምህርቱ ውስጥ ይህንን ማግኘት አልቻልኩም። ከአጋዥ ጋር መነጋገር ይፈልጋሉ?', sources: 'ምንጮች',
       step: 'ደረጃ {n} ከ {total}', stepFocus: 'ትኩረት ተሰጥቷል፦ {label}',
       announcement: 'የረዳት ምላሽ ዝግጁ ነው', skipToMain: 'ወደ ዋና ይዘት ዝለል'
     }
@@ -534,10 +534,18 @@
       this._mounted = false;
     }
 
+    _normalizeApi(rawApi) {
+      if (!rawApi) return '/api';
+      const trimmed = rawApi.trim().replace(/\/+$/, '');
+      if (trimmed === '/api' || trimmed === '/api/v1') return '/api';
+      const clean = trimmed.replace(/\/api\/v1$/, '').replace(/\/api$/, '');
+      return clean ? `${clean}/api` : '/api';
+    }
+
     connectedCallback() {
       this._lang = this.getAttribute('lang') || 'en';
-      this._apiBase = this.getAttribute('api') || '';
-      this._contentUrl = this.getAttribute('content') || '';
+      this._apiBase = this._normalizeApi(this.getAttribute('api'));
+      this._contentUrl = this.getAttribute('content') || '/content.json';
       this._render();
       this._mounted = true;
       this._loadStrings();
@@ -549,6 +557,8 @@
     attributeChangedCallback(name, _old, val) {
       if (!this._mounted) return;
       if (name === 'lang') { this._lang = val; this._loadStrings(); }
+      if (name === 'api') { this._apiBase = this._normalizeApi(val); }
+      if (name === 'content') { this._contentUrl = val || '/content.json'; this._loadContent(); }
       if (name === 'theme') { this._applyTheme(val); }
     }
 
@@ -688,8 +698,17 @@
 
       // Escape key
       this._shadow.addEventListener('keydown', e => {
-        if (e.key === 'Escape') this._close();
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          this._close();
+        }
         if (e.key === 'Tab') this._trapFocus(e);
+      });
+      window.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && this._isOpen) {
+          e.preventDefault();
+          this._close();
+        }
       });
 
       // Send
@@ -819,7 +838,11 @@
       this._addMessage('user', q);
       this._conversation.push({ role: 'user', content: q });
 
-      this.dispatchEvent(new CustomEvent('db-assistant:question', { bubbles: true, composed: true, detail: { question: q, lang: this._lang } }));
+      this.dispatchEvent(new CustomEvent('db-assistant:question', {
+        bubbles: true,
+        composed: true,
+        detail: { text: q, language: this._lang, question: q, lang: this._lang }
+      }));
 
       const loadingId = this._addMessage('loading', this._strings.loading);
 
@@ -878,6 +901,7 @@
       const div = document.createElement('div');
       div.id = id;
       div.setAttribute('role', role === 'user' ? 'none' : 'article');
+      div.setAttribute('dir', 'auto');
       div.className = `msg msg-${role === 'loading' ? 'loading' : role}`;
 
       // Format text: bold **...** and line breaks
@@ -901,6 +925,16 @@
         readBtn.textContent = `🔊 ${this._strings.listen}`;
         readBtn.addEventListener('click', () => this._speak(text));
         actions.appendChild(readBtn);
+
+        // If course content not found, offer "Talk to a person" directly (Section 5, Track 3)
+        if (text === this._strings.noAnswer || text.includes(this._strings.noAnswer) || text.includes('not find this in the course') || text.includes('ማግኘት አልቻልኩም')) {
+          const escBtn = document.createElement('button');
+          escBtn.className = 'msg-action-btn';
+          escBtn.textContent = `👤 ${this._strings.escalate}`;
+          escBtn.addEventListener('click', () => this._escalateToPerson(escBtn));
+          actions.appendChild(escBtn);
+        }
+
         div.appendChild(actions);
       }
 

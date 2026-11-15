@@ -72,6 +72,16 @@ app.use('/data',   express.static(DATA_DIR));
 app.use('/demo',   express.static(path.join(ROOT, 'demo')));
 app.use('/savanna', express.static(path.join(ROOT, 'savanna')));
 
+// Direct /content.json route
+app.get('/content.json', (_req, res) => {
+  const file = path.join(DATA_DIR, 'content.json');
+  if (fs.existsSync(file)) {
+    res.sendFile(file);
+  } else {
+    res.json(contentData);
+  }
+});
+
 // ── Health ────────────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
   res.json({
@@ -288,11 +298,20 @@ Proclamation No. 568/2008 — Rights of Persons with Disabilities`;
 try {
   const swaggerUi = require('swagger-ui-express');
   const yaml = require('js-yaml');
-  const openapiPath = path.join(ROOT, 'openapi.yaml');
-  if (fs.existsSync(openapiPath)) {
+  const candidatePaths = [
+    path.join(ROOT, 'openapi.yaml'),
+    path.join(__dirname, '..', 'openapi.yaml'),
+    path.join(__dirname, 'openapi.yaml'),
+    '/app/openapi.yaml',
+    '/openapi.yaml'
+  ];
+  const openapiPath = candidatePaths.find(p => fs.existsSync(p));
+  if (openapiPath) {
     const spec = yaml.load(fs.readFileSync(openapiPath, 'utf8'));
     app.use('/docs', swaggerUi.serve, swaggerUi.setup(spec));
-    console.log('[server] Swagger UI at /docs');
+    console.log(`[server] Swagger UI at /docs from ${openapiPath}`);
+  } else {
+    console.warn('[server] openapi.yaml not found in candidate paths');
   }
 } catch (e) {
   console.warn('[server] Swagger UI not available:', e.message);

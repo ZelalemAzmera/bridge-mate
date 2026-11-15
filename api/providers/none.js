@@ -106,11 +106,12 @@ async function answer(question, sections, language) {
   const topSections = scored.slice(0, 2).filter(s => s.score > 0);
 
   if (topSections.length === 0) {
-    // Fallback: return first section
-    const fallback = sections[0];
+    const text = language === 'am'
+      ? 'በትምህርቱ ውስጥ ይህንን ማግኘት አልቻልኩም። ከአጋዥ ወይም አስተማሪ ጋር መነጋገር ይፈልጋሉ?'
+      : 'I could not find this in the course. Would you like to talk to a person?';
     return {
-      text: fallback.content.slice(0, 400) + '…',
-      sources: [{ title: fallback.heading, url: fallback.url || '#' }]
+      text,
+      sources: []
     };
   }
 

@@ -16,7 +16,7 @@
   "offline": "You are offline. Message saved — will send when reconnected.",
   "loading": "Loading…",
   "error": "Something went wrong. Please try again.",
-  "noAnswer": "No answer found for your question.",
+  "noAnswer": "I could not find this in the course. Would you like to talk to a person?",
   "sources": "Sources",
   "step": "Step {n} of {total}",
   "stepFocus": "Focused on: {label}",
