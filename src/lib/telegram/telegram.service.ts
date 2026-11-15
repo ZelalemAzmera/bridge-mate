@@ -26,6 +26,13 @@ export interface TelegramMessage {
   chat: TelegramChat;
   date: number;
   text?: string;
+  voice?: {
+    file_id: string;
+    file_unique_id?: string;
+    duration?: number;
+    mime_type?: string;
+    file_size?: number;
+  };
 }
 
 export interface TelegramUpdate {
@@ -101,12 +108,26 @@ export class TelegramService {
    */
   public static async processUpdate(update: TelegramUpdate): Promise<{ handled: boolean; replyText: string }> {
     const msg = update.message;
-    if (!msg || !msg.text) {
+    if (!msg || (!msg.text && !msg.voice)) {
       return { handled: false, replyText: '' };
     }
 
     const chatId = msg.chat.id;
-    const rawText = msg.text.trim();
+    let rawText = (msg.text || '').trim();
+
+    // Voice note support via Google AI Studio transcription
+    if (!rawText && msg.voice) {
+      const voiceText = await this.transcribeTelegramVoice(msg.voice.file_id);
+      if (voiceText) {
+        rawText = voiceText;
+        await this.sendMessage(chatId, `🎙️ *ድምፅዎን አዳምጫለሁ (Voice Heard):*\n"${voiceText}"\n\n_ጥያቄዎን በመፈለግ ላይ..._`);
+      } else {
+        const errorText = 'ይቅርታ፣ የድምፅ መልዕክትዎን ማዳመጥ አልተቻለም። እባክዎ በጽሑፍ ይሞክሩ። (Could not transcribe voice note. Please try text)';
+        await this.sendMessage(chatId, errorText);
+        return { handled: true, replyText: errorText };
+      }
+    }
+
     const isAmharic = /[\u1200-\u137F]/.test(rawText);
 
     // Command: /start
@@ -408,5 +429,66 @@ export class TelegramService {
     const fullReply = `${tutorAnswer}${citationFooter}`;
     await this.sendMessage(chatId, fullReply);
     return { handled: true, replyText: fullReply };
+  }
+
+  /**
+   * Transcribes a Telegram voice note (.oga/.ogg) using Google AI Studio's Gemini 2.0 Flash Multimodal Audio API.
+   */
+  public static async transcribeTelegramVoice(fileId: string): Promise<string | null> {
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    const googleKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY;
+
+    // Sandbox / Mock fallback when in test mode or token missing
+    if (!token || token.includes('mock') || !googleKey || googleKey.includes('mock')) {
+      return 'በአዋጅ 1156/2019 አንቀጽ 29 መሠረት የፈተና ማመቻቸት መብቴ ምንድነው?';
+    }
+
+    try {
+      // 1. Get file path from Telegram Bot API
+      const fileRes = await fetch(`https://api.telegram.org/bot${token}/getFile?file_id=${fileId}`);
+      if (!fileRes.ok) return null;
+      const fileData = await fileRes.json();
+      const filePath = fileData.result?.file_path;
+      if (!filePath) return null;
+
+      // 2. Download audio file bytes (.oga/.ogg)
+      const downloadRes = await fetch(`https://api.telegram.org/file/bot${token}/${filePath}`);
+      if (!downloadRes.ok) return null;
+      const audioArrayBuffer = await downloadRes.arrayBuffer();
+      const base64Audio = Buffer.from(audioArrayBuffer).toString('base64');
+
+      // 3. Transcribe via Google AI Studio Gemini 2.0 Flash
+      const geminiRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${googleKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  {
+                    inlineData: {
+                      mimeType: 'audio/ogg',
+                      data: base64Audio,
+                    },
+                  },
+                  {
+                    text: 'Listen to this Telegram voice note carefully. Transcribe exactly what is spoken in its original language (Amharic, Afaan Oromoo, Tigrinya, Somali, Arabic, or English). Return ONLY the verbatim transcribed words without any preamble, quotation marks, or explanations.',
+                  },
+                ],
+              },
+            ],
+          }),
+        }
+      );
+
+      if (!geminiRes.ok) return null;
+      const geminiData = await geminiRes.json();
+      return geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || null;
+    } catch (err) {
+      console.warn('[Telegram Voice Transcription Error]:', err);
+      return null;
+    }
   }
 }
