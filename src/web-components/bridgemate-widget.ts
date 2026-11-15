@@ -858,16 +858,39 @@ export class BridgeMateAssistantElement extends HTMLElement {
   }
 
   private speakText(text: string) {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      alert('Speech synthesis is not supported on this device.');
-      return;
+    if (typeof window === 'undefined') return;
+
+    const cleanText = (text || '')
+      .replace(/\[Source:.*?\]/g, '')
+      .replace(/[*_#`~>]/g, '')
+      .trim()
+      .slice(0, 300);
+
+    const isAmharic = this.currentLang === 'am' || /[\u1200-\u137F]/.test(cleanText);
+
+    const fallbackSpeech = () => {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = isAmharic ? 'am-ET' : 'en-US';
+        utterance.rate = 0.95;
+        window.speechSynthesis.speak(utterance);
+      }
+    };
+
+    if (isAmharic) {
+      try {
+        const audio = new Audio(`/api/tts?lang=am&text=${encodeURIComponent(cleanText)}`);
+        audio.play().catch(() => fallbackSpeech());
+        audio.onerror = () => fallbackSpeech();
+        return;
+      } catch {
+        fallbackSpeech();
+        return;
+      }
     }
 
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = this.currentLang === 'am' ? 'am-ET' : 'en-US';
-    utterance.rate = 0.95;
-    window.speechSynthesis.speak(utterance);
+    fallbackSpeech();
   }
 
   private setupSpeechRecognition() {

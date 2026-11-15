@@ -29,6 +29,49 @@ function pcmToWav(pcmBuffer: Buffer, sampleRate = 24000, numChannels = 1, bitsPe
 }
 
 /**
+ * Synthesizes expressive native speech via Hasab AI (Addis Ababa, Ethiopia).
+ * Supports Amharic (amh), Afaan Oromoo (oro), Tigrinya (tir), and English (eng).
+ */
+async function generateHasabAIAudio(text: string, lang: string, apiKey: string): Promise<Buffer | null> {
+  const langCodeMap: Record<string, string> = {
+    am: 'amh',
+    om: 'oro',
+    ti: 'tir',
+    so: 'som',
+    en: 'eng',
+  };
+  const targetLanguage = langCodeMap[lang] || 'amh';
+  const speakerName = lang === 'om' ? 'Haile' : (lang === 'ti' ? 'Aster' : 'Selam');
+
+  try {
+    const response = await fetch('https://api.hasab.ai/api/v1/tts/synthesize', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        text,
+        language: targetLanguage,
+        speaker_name: speakerName,
+      }),
+      signal: AbortSignal.timeout(12000),
+    });
+
+    if (!response.ok) {
+      console.warn(`[Hasab AI TTS] Failed with status ${response.status}`);
+      return null;
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    return Buffer.from(arrayBuffer);
+  } catch (err) {
+    console.warn('[Hasab AI TTS Error]:', err);
+    return null;
+  }
+}
+
+/**
  * Attempts to generate natural, expressive speech via Google AI Studio's Gemini 2.0 Flash Audio output.
  * Tries primary and experimental checkpoints for maximum availability.
  */
@@ -118,7 +161,26 @@ export async function GET(req: NextRequest) {
       .trim()
       .slice(0, 300);
 
-    // 1. TIER 1: Google AI Studio Gemini 2.0 Flash Audio (if API key is configured)
+    // 1. TIER 1: Native Ethiopian Voice via Hasab AI (Addis Ababa)
+    const hasabApiKey = process.env.HASAB_API_KEY;
+    if (hasabApiKey && !hasabApiKey.toLowerCase().includes('mock') && hasabApiKey.trim() !== '') {
+      try {
+        const hasabAudio = await generateHasabAIAudio(sanitizedText, lang, hasabApiKey);
+        if (hasabAudio && hasabAudio.length > 0) {
+          return new NextResponse(new Uint8Array(hasabAudio), {
+            headers: {
+              'Content-Type': 'audio/wav',
+              'Cache-Control': 'public, max-age=86400, s-maxage=86400',
+              'X-TTS-Provider': 'hasab-ai',
+            },
+          });
+        }
+      } catch (err) {
+        console.warn('[Hasab AI TTS Fallback Triggered]:', err);
+      }
+    }
+
+    // 2. TIER 2: Google AI Studio Gemini 2.0 Flash Audio (if API key is configured)
     const googleApiKey =
       process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
       process.env.GEMINI_API_KEY ||
@@ -142,7 +204,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 2. TIER 2: Fast, Zero-Key Google Translate Edge Stream
+    // 3. TIER 3: Fast, Zero-Key Google Translate Edge Stream
     const ttsLang = lang === 'en' ? 'en' : 'am';
     const googleTtsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${ttsLang}&q=${encodeURIComponent(sanitizedText)}`;
 

@@ -3,6 +3,53 @@ import { NextRequest, NextResponse } from 'next/server';
 export const runtime = 'nodejs';
 
 /**
+ * Transcribes audio using Hasab AI's native speech recognition API (Addis Ababa, Ethiopia).
+ */
+async function transcribeWithHasabAI(audioBuffer: Buffer, mimeType: string, language: string, apiKey: string): Promise<string | null> {
+  const langMap: Record<string, string> = {
+    am: 'amh',
+    om: 'oro',
+    ti: 'tir',
+    en: 'eng',
+  };
+  const sourceLang = langMap[language] || 'amh';
+
+  try {
+    const formData = new FormData();
+    const extension = mimeType.includes('wav') ? 'wav' : (mimeType.includes('mp3') ? 'mp3' : 'webm');
+    formData.append('audio', new Blob([new Uint8Array(audioBuffer)], { type: mimeType }), `speech.${extension}`);
+    formData.append('transcribe', 'true');
+    formData.append('translate', 'false');
+    formData.append('summarize', 'false');
+    formData.append('language', 'auto');
+    formData.append('source_language', sourceLang);
+
+    const response = await fetch('https://api.hasab.ai/api/v1/upload-audio', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: formData,
+      signal: AbortSignal.timeout(18000),
+    });
+
+    if (!response.ok) {
+      console.warn(`[Hasab AI STT] Request failed with status ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    if (data.success && data.transcription) {
+      return data.transcription.trim();
+    }
+  } catch (err) {
+    console.warn('[Hasab AI STT Error]:', err);
+  }
+
+  return null;
+}
+
+/**
  * Transcribes audio using Google AI Studio's Gemini 2.0 Flash Multimodal Audio API.
  * Supports Amharic (አማርኛ), Afaan Oromoo, Tigrinya, Somali, Arabic, and English.
  */
@@ -82,7 +129,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Audio data is required' }, { status: 400 });
     }
 
-    // Check for Google AI Studio API key
+    // 1. TIER 1: Native Ethiopian STT via Hasab AI (Addis Ababa)
+    const hasabApiKey = process.env.HASAB_API_KEY;
+    if (hasabApiKey && !hasabApiKey.toLowerCase().includes('mock') && hasabApiKey.trim() !== '') {
+      try {
+        const audioBuffer = Buffer.from(audioBase64, 'base64');
+        const transcript = await transcribeWithHasabAI(audioBuffer, mimeType, language, hasabApiKey);
+        if (transcript) {
+          return NextResponse.json({
+            success: true,
+            text: transcript,
+            provider: 'hasab-ai',
+          });
+        }
+      } catch (err) {
+        console.warn('[Hasab AI STT Error]:', err);
+      }
+    }
+
+    // 2. TIER 2: Google AI Studio Multimodal Audio Transcription
     const googleApiKey =
       process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
       process.env.GEMINI_API_KEY ||

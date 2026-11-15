@@ -432,10 +432,11 @@ export class TelegramService {
   }
 
   /**
-   * Transcribes a Telegram voice note (.oga/.ogg) using Google AI Studio's Gemini 2.0 Flash Multimodal Audio API.
+   * Transcribes a Telegram voice note (.oga/.ogg) using Hasab AI or Google AI Studio.
    */
   public static async transcribeTelegramVoice(fileId: string): Promise<string | null> {
     const token = process.env.TELEGRAM_BOT_TOKEN;
+    const hasabKey = process.env.HASAB_API_KEY;
     const googleKey =
       process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
       process.env.GEMINI_API_KEY ||
@@ -443,7 +444,7 @@ export class TelegramService {
       process.env.NEXT_PUBLIC_GOOGLE_AI_KEY;
 
     // Sandbox / Mock fallback when in test mode or token missing
-    if (!token || token.includes('mock') || !googleKey || googleKey.includes('mock')) {
+    if (!token || token.includes('mock') || ((!hasabKey || hasabKey.includes('mock')) && (!googleKey || googleKey.includes('mock')))) {
       return 'በአዋጅ 1156/2019 አንቀጽ 29 መሠረት የፈተና ማመቻቸት መብቴ ምንድነው?';
     }
 
@@ -459,10 +460,37 @@ export class TelegramService {
       const downloadRes = await fetch(`https://api.telegram.org/file/bot${token}/${filePath}`);
       if (!downloadRes.ok) return null;
       const audioArrayBuffer = await downloadRes.arrayBuffer();
-      const base64Audio = Buffer.from(audioArrayBuffer).toString('base64');
 
-      // 3. Transcribe via Google AI Studio Gemini 2.0 Flash
-      const geminiRes = await fetch(
+      // 3. TIER 1: Native Ethiopian STT via Hasab AI
+      if (hasabKey && !hasabKey.toLowerCase().includes('mock') && hasabKey.trim() !== '') {
+        try {
+          const form = new FormData();
+          form.append('audio', new Blob([audioArrayBuffer], { type: 'audio/ogg' }), 'telegram_voice.ogg');
+          form.append('transcribe', 'true');
+          form.append('source_language', 'amh');
+
+          const hasabRes = await fetch('https://api.hasab.ai/api/v1/upload-audio', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${hasabKey}` },
+            body: form,
+            signal: AbortSignal.timeout(18000),
+          });
+
+          if (hasabRes.ok) {
+            const hasabData = await hasabRes.json();
+            if (hasabData.success && hasabData.transcription) {
+              return hasabData.transcription.trim();
+            }
+          }
+        } catch (hasabErr) {
+          console.warn('[Telegram Hasab STT Fallback]:', hasabErr);
+        }
+      }
+
+      // 4. TIER 2: Google AI Studio Gemini 2.0 Flash
+      if (googleKey && !googleKey.toLowerCase().includes('mock')) {
+        const base64Audio = Buffer.from(audioArrayBuffer).toString('base64');
+        const geminiRes = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${googleKey}`,
         {
           method: 'POST',
@@ -487,12 +515,15 @@ export class TelegramService {
         }
       );
 
-      if (!geminiRes.ok) return null;
-      const geminiData = await geminiRes.json();
-      return geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || null;
+        if (!geminiRes.ok) return null;
+        const geminiData = await geminiRes.json();
+        return geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || null;
+      }
     } catch (err) {
       console.warn('[Telegram Voice Transcription Error]:', err);
       return null;
     }
+
+    return null;
   }
 }

@@ -21,6 +21,56 @@ describe('Google AI Studio Audio (TTS & STT) Integration', () => {
     expect(res.status).toBe(400);
   });
 
+  it('GET /api/tts synthesizes speech via Hasab AI when HASAB_API_KEY is configured', async () => {
+    process.env.HASAB_API_KEY = 'test_hasab_key';
+    const originalFetch = global.fetch;
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      arrayBuffer: async () => Buffer.from('RIFF$   WAVEfmt     \x10   \x01 \x01 D\xac  D\xac  \x01 \x08 data    '),
+    } as any);
+
+    const req = new NextRequest('http://localhost:3000/api/tts?lang=am&text=ሰላም');
+    const res = await getTts(req);
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('X-TTS-Provider')).toBe('hasab-ai');
+    expect(res.headers.get('Content-Type')).toBe('audio/wav');
+
+    global.fetch = originalFetch;
+    delete process.env.HASAB_API_KEY;
+  });
+
+  it('POST /api/transcribe processes audio with Hasab AI when HASAB_API_KEY is set', async () => {
+    process.env.HASAB_API_KEY = 'test_hasab_key';
+    const originalFetch = global.fetch;
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({ success: true, transcription: 'ሰላም ብሪጅሜት' }),
+    } as any);
+
+    const req = new NextRequest('http://localhost:3000/api/transcribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        audio: Buffer.from('fake-audio-bytes').toString('base64'),
+        mimeType: 'audio/webm',
+        language: 'am',
+      }),
+    });
+
+    const res = await postTranscribe(req);
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.success).toBe(true);
+    expect(data.provider).toBe('hasab-ai');
+    expect(data.text).toBe('ሰላም ብሪጅሜት');
+
+    global.fetch = originalFetch;
+    delete process.env.HASAB_API_KEY;
+  });
+
   it('GET /api/tts redirects to direct stream when serverless proxy fetch fails', async () => {
     const originalFetch = global.fetch;
     global.fetch = vi.fn().mockRejectedValueOnce(new Error('Vercel IP Blocked'));

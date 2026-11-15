@@ -1338,26 +1338,84 @@
       if (el) el.remove();
     }
 
-    // ── TTS ───────────────────────────────────────────────────────────────────
+    // ── TTS (Hasab AI / High-fidelity audio stream with Web Speech fallback) ──
     _speak(text) {
-      if (!this._synth) return;
-      this._synth.cancel();
-      const utt = new SpeechSynthesisUtterance(text.replace(/\*\*/g, '').replace(/\n/g, ' '));
-      const langMap = { am: 'am-ET', ti: 'ti-ET', om: 'om-ET', so: 'so-SO', ar: 'ar-SA', en: 'en-US' };
-      utt.lang = langMap[this._lang] || 'en-US';
-      utt.rate = this._speechRate || (['am', 'ti'].includes(this._lang) ? 0.85 : 1.0);
-      if (this._handsFree) {
-        utt.onend = () => {
-          if (this._handsFree && this._isOpen) {
-            setTimeout(() => {
-              if (this._handsFree && this._isOpen && !this._isListening) {
-                this._toggleVoice();
-              }
-            }, 800);
-          }
-        };
+      if (typeof window === 'undefined') return;
+
+      const cleanText = (text || '')
+        .replace(/\[Source:.*?\]/g, '')
+        .replace(/\[.*?\]\(.*?\)/g, '')
+        .replace(/[*_#`~>]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 300);
+
+      if (!cleanText) return;
+
+      if (this._synth) this._synth.cancel();
+      if (this._activeAudio) {
+        this._activeAudio.pause();
+        this._activeAudio = null;
       }
-      this._synth.speak(utt);
+
+      const isLocalLang = ['am', 'ti', 'om', 'so'].includes(this._lang) || /[\u1200-\u137F]/.test(cleanText);
+
+      const fallbackToWebSpeech = () => {
+        if (!this._synth) return;
+        this._synth.cancel();
+        const utt = new SpeechSynthesisUtterance(cleanText);
+        const langMap = { am: 'am-ET', ti: 'ti-ET', om: 'om-ET', so: 'so-SO', ar: 'ar-SA', en: 'en-US' };
+        utt.lang = langMap[this._lang] || 'en-US';
+        utt.rate = this._speechRate || (['am', 'ti'].includes(this._lang) ? 0.85 : 1.0);
+        if (this._handsFree) {
+          utt.onend = () => {
+            if (this._handsFree && this._isOpen) {
+              setTimeout(() => {
+                if (this._handsFree && this._isOpen && !this._isListening) {
+                  this._toggleVoice();
+                }
+              }, 800);
+            }
+          };
+        }
+        this._synth.speak(utt);
+      };
+
+      if (isLocalLang) {
+        try {
+          const apiEndpoint = this._apiBase ? `${this._apiBase}/tts` : '/api/tts';
+          const audioUrl = `${apiEndpoint}?lang=${this._lang || 'am'}&text=${encodeURIComponent(cleanText)}`;
+          const audio = new Audio(audioUrl);
+          this._activeAudio = audio;
+
+          audio.onended = () => {
+            this._activeAudio = null;
+            if (this._handsFree && this._isOpen) {
+              setTimeout(() => {
+                if (this._handsFree && this._isOpen && !this._isListening) {
+                  this._toggleVoice();
+                }
+              }, 800);
+            }
+          };
+
+          audio.onerror = () => {
+            this._activeAudio = null;
+            fallbackToWebSpeech();
+          };
+
+          audio.play().catch(() => {
+            this._activeAudio = null;
+            fallbackToWebSpeech();
+          });
+          return;
+        } catch (e) {
+          fallbackToWebSpeech();
+          return;
+        }
+      }
+
+      fallbackToWebSpeech();
     }
 
     // ── Voice input ───────────────────────────────────────────────────────────
