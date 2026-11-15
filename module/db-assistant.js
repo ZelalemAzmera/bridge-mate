@@ -38,7 +38,9 @@
       loading: 'Loading…', error: 'Something went wrong. Please try again.',
       noAnswer: 'I could not find this in the course. Would you like to talk to a person?', sources: 'Sources',
       step: 'Step {n} of {total}', stepFocus: 'Focused on: {label}',
-      announcement: 'Assistant response ready', skipToMain: 'Skip to main content'
+      announcement: 'Assistant response ready', skipToMain: 'Skip to main content',
+      exportTranscript: 'Download Transcript (Plain text / Braille)',
+      speechRate: 'Audio speed', handsFree: 'Hands-Free mode', handsFreeOff: 'Exit Hands-Free'
     },
     am: {
       open: 'ብሪጅሜት ረዳት ክፈት', close: 'ረዳቱን ዝጋ',
@@ -51,9 +53,116 @@
       loading: 'በመጫን ላይ…', error: 'ስህተት ተከስቷል።',
       noAnswer: 'በትምህርቱ ውስጥ ይህንን ማግኘት አልቻልኩም። ከአጋዥ ጋር መነጋገር ይፈልጋሉ?', sources: 'ምንጮች',
       step: 'ደረጃ {n} ከ {total}', stepFocus: 'ትኩረት ተሰጥቷል፦ {label}',
-      announcement: 'የረዳት ምላሽ ዝግጁ ነው', skipToMain: 'ወደ ዋና ይዘት ዝለል'
+      announcement: 'የረዳት ምላሽ ዝግጁ ነው', skipToMain: 'ወደ ዋና ይዘት ዝለል',
+      exportTranscript: 'የውይይት ጽሑፍ አውርድ (ለብሬይል)',
+      speechRate: 'የድምፅ ፍጥነት', handsFree: 'ያለእጅ ንክኪ', handsFreeOff: 'ያለእጅ ንክኪ አቁም'
+    },
+    om: {
+      open: 'Gargaaraa BridgeMate Bani', close: 'Gargaaraa Cufi',
+      placeholder: 'Gaaffii gaafadhaa…', send: 'Ergi', listen: 'Dhaggeeffadhu',
+      stopListen: 'Dhaabi', voiceInput: 'Sagaleen Galchuu', simpleMode: 'Haala Salphaa',
+      simpleModeOff: 'Haala Guutuu', guideme: 'Na Qajeelchi', escalate: 'Gargaaraa wajjin haasa\'i',
+      escalating: 'Walqunnamsiisaa jira…', escalated: 'Gaaffiin deeggarsaa ergameera. Lakkoofsa: {ticketId}',
+      escalateError: 'Walqunnamsiisuun hin danda\'amne. Irra deebi\'aa yaalaa.',
+      offline: 'Tajaajila toora irraa addaan citeera. Ergaan olkaa\'ameera.',
+      loading: 'Fe\'aa jira…', error: 'Dogoggorri uumameera.',
+      noAnswer: 'Barnoota keessatti kana hin arganne. Gargaaraa wajjin haasa\'uu barbaadduu?', sources: 'Maddoota',
+      step: 'Tarkaanfii {n} keessaa {total}', stepFocus: 'Xiyyeeffannoo: {label}',
+      announcement: 'Deebiin qophaa\'eera', skipToMain: 'Gara qabiyyee ijootitti darbi',
+      exportTranscript: 'Waraabbii Barreeffamaa Buufadhaa',
+      speechRate: 'Saffisa Sagalee', handsFree: 'Harka Malee', handsFreeOff: 'Harka Malee Dhaabi'
+    },
+    ti: {
+      open: 'ብሪጅሜት ሓጋዚ ኽፈት', close: 'ሓጋዚ ዕጾ',
+      placeholder: 'ሕቶ ሕተቱ…', send: 'ስደድ', listen: 'ስማዕ',
+      stopListen: 'ኣቋርጽ', voiceInput: 'ብድምጺ ምእታው', simpleMode: 'ቀሊል ሁነታ',
+      simpleModeOff: 'ምሉእ ሁነታ', guideme: 'መርሐኒ', escalate: 'ምስ ሓጋዚ ተዛረብ',
+      escalating: 'የራኽብ ኣሎ…', escalated: 'ናይ ደገፍ ሕቶ ተላኢኹ። ቲኬት፦ {ticketId}',
+      escalateError: 'ምርኻብ ኣይተኻእለን። በጃኹም ደጊምኩም ፈትኑ።',
+      offline: 'ካብ ኢንተርነት ተቛሪጹ ኣሎ። መልእኽቲ ተዓቂቡ ኣሎ።',
+      loading: 'ይጽዕን ኣሎ…', error: 'ስሕተት ተፈጢሩ።',
+      noAnswer: 'ኣብ ትምህርቲ ክረኽቦ ኣይከኣልኩን። ምስ ሓጋዚ ክትዘራረቡ ትደልዩ ዶ?', sources: 'ምንጭታት',
+      step: 'ደረጃ {n} ካብ {total}', stepFocus: 'ትኹረት ዝተገብረሉ፦ {label}',
+      announcement: 'ናይ ሓጋዚ መልሲ ድሉው ኣሎ', skipToMain: 'ናብቲ ቀንዲ ትሕዝቶ ስገር',
+      exportTranscript: 'ናይ ዝርራብ ጽሑፍ ኣውርድ (ንብሬይል)',
+      speechRate: 'ናይ ድምጺ ቅልጣፈ', handsFree: 'ብዘይ ኢድ', handsFreeOff: 'ብዘይ ኢድ ኣቋርጽ'
+    },
+    so: {
+      open: 'Fur Kaaliyaha BridgeMate', close: 'Xir Kaaliyaha',
+      placeholder: 'Weydii su\'aal…', send: 'Dir', listen: 'Dhageyso',
+      stopListen: 'Jooji', voiceInput: 'Codka ku qor', simpleMode: 'Qaabka Fudud',
+      simpleModeOff: 'Qaabka Buuxa', guideme: 'I Hago', escalate: 'Qof la hadal',
+      escalating: 'Waa la xiriirinayaa…', escalated: 'Codsiga taageerada waa la diray. Aqoonsi: {ticketId}',
+      escalateError: 'Lama xiriiri karin. Fadlan mar kale isku day.',
+      offline: 'Khadka kama jirtid. Farriinta waa la kaydiyay.',
+      loading: 'Waa la soo gelinayaa…', error: 'Khalad ayaa dhacay.',
+      noAnswer: 'Kuma helin koorsada dhexdeeda. Ma doonaysaa inaad qof la hadasho?', sources: 'Ilaha',
+      step: 'Tallaabada {n} ee {total}', stepFocus: 'Diiradda: {label}',
+      announcement: 'Jawaabtu waa diyaar', skipToMain: 'U bood nuxurka guud',
+      exportTranscript: 'Soo deji Qoraalka Wadahadalka',
+      speechRate: 'Xawaaraha Codka', handsFree: 'Gacmo La\'aan', handsFreeOff: 'Jooji Gacmo La\'aanta'
+    },
+    ar: {
+      open: 'فتح مساعد بريدج ميت', close: 'إغلاق المساعد',
+      placeholder: 'اطرح سؤالاً…', send: 'إرسال', listen: 'استمع',
+      stopListen: 'إيقاف', voiceInput: 'الإدخال الصوتي', simpleMode: 'الوضع البسيط',
+      simpleModeOff: 'الوضع الكامل', guideme: 'إرشاد', escalate: 'التحدث مع شخص',
+      escalating: 'جاري الاتصال…', escalated: 'تم إرسال طلب الدعم. التذكرة: {ticketId}',
+      escalateError: 'تعذر الاتصال. يرجى المحاولة مرة أخرى.',
+      offline: 'أنت غير متصل بالإنترنت. تم حفظ الرسالة.',
+      loading: 'جاري التحميل…', error: 'حدث خطأ. يرجى المحاولة مرة أخرى.',
+      noAnswer: 'لم أتمكن من العثور على هذا في المنهج. هل ترغب في التحدث مع شخص؟', sources: 'المصادر',
+      step: 'الخطوة {n} من {total}', stepFocus: 'التركيز على: {label}',
+      announcement: 'رد المساعد جاهز', skipToMain: 'الانتقال إلى المحتوى الرئيسي',
+      exportTranscript: 'تنزيل النص المكتوب (لبرايل)',
+      speechRate: 'سرعة الصوت', handsFree: 'بدون استخدام اليدين', handsFreeOff: 'إيقاف الوضع التلقائي'
     }
   };
+
+  // ── Grounded Curriculum & Legal Prompt Suggestions (Multilingual) ─────────
+  const GROUNDED_PROMPTS = {
+    en: [
+      { text: 'What accommodation rights exist under Proclamation 1156/2019 Art. 29?', label: 'Exam Accommodations (Art. 29)' },
+      { text: 'How do I test my Python code with a screen reader in Savanna Module 3?', label: 'Python Screen Reader Guide' },
+      { text: 'Can I request job accommodations without disclosing medical records?', label: 'Job Accommodation Rights' }
+    ],
+    am: [
+      { text: 'በአዋጅ 1156/2019 አንቀጽ 29 መሠረት የፈተና ማመቻቸት መብቴ ምንድነው?', label: 'የፈተና ማመቻቸት መብቶች' },
+      { text: 'በሳቫና ሞጁል 3 የፓይተን ፕሮጀክቶችን በስክሪን አንባቢ እንዴት እመራለሁ?', label: 'ፓይተን እና ስክሪን አንባቢ' },
+      { text: 'ለስራ ማመልከቻ የህክምና ማስረጃ ሳላቀርብ ማመቻቸት መጠየቅ እችላለሁ?', label: 'የስራ ማመቻቸት ያለህክምና ማስረጃ' }
+    ],
+    om: [
+      { text: 'Labsii 1156/2019 Keewwata 29 jalatti mirgi fooyyee qormaataa koo maali?', label: 'Mirga Fooyyee Qormaataa' },
+      { text: 'Boqonnaa 3 Savanna keessatti piroojektii Paayitanii dubbisaa iskiriiniitiin akkamittan hojjedha?', label: 'Paayitanii fi Dubbisaa Iskiriinii' },
+      { text: 'Ragaa yaalaa malee iddoo hojiitti fooyyee gaafachuu nan danda\'aa?', label: 'Fooyyee Iddoo Hojii' }
+    ],
+    ti: [
+      { text: 'ብመሰረት ኣዋጅ 1156/2019 ዓንቀጽ 29 ኣብ ፈተና ናይ ምምችቻው መሰለይ እንታይ እዩ?', label: 'መሰል ምምችቻው ፈተና' },
+      { text: 'ኣብ ሳቫና ሞጁል 3 ናይ ፓይተን ፕሮጀክትታት ብስክሪን ሪደር ብኸመይ ክሰርሕ እኽእል?', label: 'ፓይተንን ስክሪን ሪደርን' },
+      { text: 'ናይ ሕክምና መረዳእታ ከየቕረብኩ ናይ ስራሕ ምምችቻው ክሓትት እኽእል ድየ?', label: 'ምምችቻው ስራሕ' }
+    ],
+    so: [
+      { text: 'Xeerka 1156/2019 Qodobka 29, maxay yihiin xuquuqdayda waafajinta imtixaanka?', label: 'Xuquuqda Waafajinta' },
+      { text: 'Sideen ugu isticmaali karaa akhriyaha shaashadda mashaariicda Python ee Savanna?', label: 'Python iyo Akhriyaha Shaashadda' },
+      { text: 'Ma codsan karaa waafajinta shaqada anoon keenin caddayn caafimaad?', label: 'Waafajinta Shaqada' }
+    ],
+    ar: [
+      { text: 'ما هي حقوق التسهيلات الخاصة بي بموجب الإعلان 1156/2019 المادة 29؟', label: 'حقوق تسهيلات الامتحانات' },
+      { text: 'كيف أستخدم قارئ الشاشة لمشاريع بايثون في وحدة سافانا 3؟', label: 'بايثون وقارئ الشاشة' },
+      { text: 'هل يمكنني طلب تسهيلات العمل دون الكشف عن تقارير طبية؟', label: 'تسهيلات العمل بدون إفصاح طبي' }
+    ]
+  };
+
+  // ── Haptic feedback helper (fails gracefully if unsupported) ─────────────
+  function triggerHaptic(pattern) {
+    try {
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator && typeof navigator.vibrate === 'function') {
+        navigator.vibrate(pattern);
+      }
+    } catch (e) {
+      // Fail silently on devices without haptic motors or restricted permissions
+    }
+  }
 
   // ── BM25 offline search ───────────────────────────────────────────────────
   const STOPWORDS = new Set(['a','an','the','is','are','was','were','be','have','of','in','to','for','on','with','and','or','not','it','i','you','we','they','ነው','ወይም','እና','ስለ','ከ','ወደ']);
@@ -188,34 +297,50 @@
     .panel-header {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 12px 16px;
+      gap: 6px;
+      padding: 8px 12px;
       background: var(--bm-primary);
       color: #000;
     }
     .panel-title {
       flex: 1;
       font-weight: 700;
-      font-size: 1rem;
+      font-size: 0.95rem;
       line-height: 1.4;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .panel-header button {
+    .panel-header button, .header-btn {
       min-width: 44px;
       min-height: 44px;
       background: transparent;
       border: none;
       cursor: pointer;
       border-radius: 8px;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       color: #000;
       font-size: 0.8rem;
-      padding: 4px 8px;
+      font-weight: 600;
+      padding: 4px 6px;
       white-space: nowrap;
+      transition: background 0.15s;
     }
-    .panel-header button:hover, .panel-header button:focus-visible {
+    .panel-header button:hover, .panel-header button:focus-visible,
+    .header-btn:hover, .header-btn:focus-visible {
       background: rgba(0,0,0,0.12);
+    }
+    .panel-header button[aria-pressed="true"], .header-btn[aria-pressed="true"] {
+      background: rgba(0,0,0,0.22);
+      font-weight: 700;
+    }
+    .panel-header button svg, .header-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+      pointer-events: none;
     }
 
     /* ── Tab bar ── */
@@ -364,6 +489,63 @@
     #voice-btn { background: var(--bm-bg2); color: var(--bm-text2); border: 1px solid var(--bm-border); }
     #voice-btn.listening { background: #e53935; color: #fff; border-color: #e53935; }
     #voice-btn:hover, #voice-btn:focus-visible { background: var(--bm-primary); color: #000; border-color: var(--bm-primary); }
+    #handsfree-btn { background: var(--bm-bg2); color: var(--bm-text2); border: 1px solid var(--bm-border); }
+    #handsfree-btn:hover, #handsfree-btn:focus-visible { background: var(--bm-primary); color: #000; border-color: var(--bm-primary); }
+    #handsfree-btn.active { background: #2e7d32; color: #fff; border-color: #2e7d32; }
+
+    /* ── Quick Prompt Chips ── */
+    .quick-chips-bar {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 8px 12px;
+      background: var(--bm-bg);
+      border-top: 1px solid var(--bm-border);
+      scrollbar-width: thin;
+      -webkit-overflow-scrolling: touch;
+      flex-shrink: 0;
+    }
+    .quick-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      border: 1px solid var(--bm-border);
+      border-radius: 16px;
+      background: var(--bm-bg2);
+      color: var(--bm-text);
+      font-size: 0.76rem;
+      font-family: inherit;
+      white-space: nowrap;
+      cursor: pointer;
+      min-height: 38px;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      flex-shrink: 0;
+    }
+    .quick-chip:hover, .quick-chip:focus-visible {
+      background: var(--bm-primary);
+      color: #000;
+      border-color: var(--bm-primary-dark);
+    }
+
+    /* ── Simple mode enhancements ── */
+    #panel.simple-mode-active .msg {
+      font-size: 1.05rem;
+      line-height: 1.85;
+      border-width: 2px;
+    }
+    #panel.simple-mode-active .quick-chip {
+      font-size: 0.88rem;
+      padding: 8px 14px;
+      min-height: 44px;
+    }
+    .msg-simplified-point {
+      margin-top: 6px;
+      padding: 4px 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
 
     /* ── Guide panel ── */
     #guide-panel { display: none; flex-direction: column; flex: 1; overflow: hidden; }
@@ -509,6 +691,7 @@
   const ICON_SEND = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>`;
   const ICON_MIC = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>`;
   const ICON_STOP = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h12v12H6z"/></svg>`;
+  const ICON_DOWNLOAD = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>`;
 
   // ── Component ─────────────────────────────────────────────────────────────
   class DbAssistant extends HTMLElement {
@@ -519,6 +702,8 @@
       this._shadow = this.attachShadow({ mode: 'open' });
       this._strings = { ...FALLBACK_STRINGS.en };
       this._lang = 'en';
+      this._speechRate = 1.0;
+      this._handsFree = false;
       this._apiBase = '';
       this._contentUrl = '';
       this._sections = [];
@@ -527,9 +712,9 @@
       this._simpleMode = false;
       this._isListening = false;
       this._recognition = null;
-      this._synth = window.speechSynthesis || null;
+      this._synth = typeof window !== 'undefined' ? (window.speechSynthesis || null) : null;
       this._currentTab = 'chat';
-      this._offlineQueue = JSON.parse(localStorage.getItem('bm-offline-queue') || '[]');
+      this._offlineQueue = typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem('bm-offline-queue') || '[]') : [];
       this._guideSteps = [];
       this._mounted = false;
     }
@@ -544,11 +729,14 @@
 
     connectedCallback() {
       this._lang = this.getAttribute('lang') || 'en';
+      const savedRate = typeof localStorage !== 'undefined' ? parseFloat(localStorage.getItem('bm-speech-rate') || '0') : 0;
+      this._speechRate = (savedRate && [0.85, 1.0, 1.25].includes(savedRate)) ? savedRate : (['am', 'ti'].includes(this._lang) ? 0.85 : 1.0);
       this._apiBase = this._normalizeApi(this.getAttribute('api'));
       this._contentUrl = this.getAttribute('content') || '/content.json';
       this._render();
       this._mounted = true;
       this._loadStrings();
+      this._renderQuickChips();
       this._loadContent();
       this._setupVoice();
       this._flushOfflineQueue();
@@ -556,10 +744,29 @@
 
     attributeChangedCallback(name, _old, val) {
       if (!this._mounted) return;
-      if (name === 'lang') { this._lang = val; this._loadStrings(); }
+      if (name === 'lang') {
+        this._lang = val;
+        const savedRate = typeof localStorage !== 'undefined' ? parseFloat(localStorage.getItem('bm-speech-rate') || '0') : 0;
+        if (!savedRate) {
+          this._speechRate = ['am', 'ti'].includes(val) ? 0.85 : 1.0;
+        }
+        this._loadStrings();
+        this._renderQuickChips();
+      }
       if (name === 'api') { this._apiBase = this._normalizeApi(val); }
       if (name === 'content') { this._contentUrl = val || '/content.json'; this._loadContent(); }
       if (name === 'theme') { this._applyTheme(val); }
+    }
+
+    setLanguage(lang) {
+      this.setAttribute('lang', lang);
+      this._lang = lang;
+      const savedRate = typeof localStorage !== 'undefined' ? parseFloat(localStorage.getItem('bm-speech-rate') || '0') : 0;
+      if (!savedRate) {
+        this._speechRate = ['am', 'ti'].includes(lang) ? 0.85 : 1.0;
+      }
+      this._loadStrings();
+      this._renderQuickChips();
     }
 
     // ── String loading ──────────────────────────────────────────────────────
@@ -609,6 +816,25 @@
       if (sendBtn) sendBtn.setAttribute('aria-label', s.send);
       const voiceBtn = this._shadow.getElementById('voice-btn');
       if (voiceBtn) voiceBtn.setAttribute('aria-label', s.voiceInput);
+      const rateToggle = this._shadow.getElementById('rate-toggle');
+      if (rateToggle) {
+        rateToggle.textContent = `🔊 ${this._speechRate}x`;
+        rateToggle.setAttribute('aria-label', `${s.speechRate || 'Audio speed'}: ${this._speechRate}x`);
+      }
+      const exportBtn = this._shadow.getElementById('export-btn');
+      if (exportBtn) {
+        exportBtn.setAttribute('aria-label', s.exportTranscript || 'Download Transcript (Plain text / Braille)');
+      }
+      const simpleToggle = this._shadow.getElementById('simple-toggle');
+      if (simpleToggle) {
+        simpleToggle.textContent = this._simpleMode ? s.simpleModeOff : s.simpleMode;
+        simpleToggle.setAttribute('aria-label', this._simpleMode ? s.simpleModeOff : s.simpleMode);
+      }
+      const handsfreeBtn = this._shadow.getElementById('handsfree-btn');
+      if (handsfreeBtn) {
+        handsfreeBtn.setAttribute('aria-label', this._handsFree ? (s.handsFreeOff || 'Disable Hands-Free') : (s.handsFree || 'Hands-Free voice mode'));
+        handsfreeBtn.title = s.handsFree || 'Hands-Free';
+      }
     }
 
     // ── Content loading ─────────────────────────────────────────────────────
@@ -641,8 +867,10 @@
           <!-- Header -->
           <div class="panel-header">
             <span id="panel-title" class="panel-title">🌉 BridgeMate</span>
-            <button id="simple-toggle" class="panel-header" aria-pressed="false" aria-label="${s.simpleMode}">${s.simpleMode}</button>
-            <button id="close-btn" aria-label="${s.close}">${ICON_CLOSE}</button>
+            <button id="rate-toggle" class="header-btn" aria-label="${s.speechRate || 'Audio speed'}: ${this._speechRate}x">🔊 ${this._speechRate}x</button>
+            <button id="export-btn" class="header-btn" aria-label="${s.exportTranscript || 'Download Transcript'}">${ICON_DOWNLOAD}</button>
+            <button id="simple-toggle" class="header-btn" aria-pressed="false" aria-label="${s.simpleMode}">${s.simpleMode}</button>
+            <button id="close-btn" class="header-btn" aria-label="${s.close}">${ICON_CLOSE}</button>
           </div>
 
           <!-- Tabs -->
@@ -655,8 +883,10 @@
           <!-- Chat section -->
           <div id="chat-section" role="tabpanel" aria-labelledby="tab-chat" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
             <div id="chat-log" role="log" aria-live="polite" aria-label="Conversation" tabindex="0"></div>
+            <div id="quick-chips-bar" class="quick-chips-bar" role="region" aria-label="Grounded prompt suggestions"></div>
             <div class="input-area">
               <textarea id="chat-input" rows="1" aria-label="${s.placeholder}" placeholder="${s.placeholder}" autocomplete="off" autocorrect="off" autocapitalize="sentences"></textarea>
+              <button id="handsfree-btn" class="icon-btn" aria-label="${s.handsFree || 'Hands-Free mode'}" aria-pressed="false" title="${s.handsFree || 'Hands-Free'}">🎧</button>
               <button id="voice-btn" class="icon-btn" aria-label="${s.voiceInput}" aria-pressed="false">${ICON_MIC}</button>
               <button id="send-btn" class="icon-btn" aria-label="${s.send}">${ICON_SEND}</button>
             </div>
@@ -725,11 +955,16 @@
       $('voice-btn').addEventListener('click', () => this._toggleVoice());
 
       // Simple mode
-      $('simple-toggle').addEventListener('click', (e) => {
-        this._simpleMode = !this._simpleMode;
-        e.currentTarget.textContent = this._simpleMode ? this._strings.simpleModeOff : this._strings.simpleMode;
-        e.currentTarget.setAttribute('aria-pressed', String(this._simpleMode));
-      });
+      $('simple-toggle').addEventListener('click', () => this._toggleSimple());
+
+      // Audio playback speed regulator
+      $('rate-toggle').addEventListener('click', () => this._cycleSpeechRate());
+
+      // Plain-Text Braille transcript export
+      $('export-btn').addEventListener('click', () => this._exportTranscript());
+
+      // Hands-Free continuous voice loop
+      $('handsfree-btn').addEventListener('click', () => this._toggleHandsFree());
 
       // Escalate
       $('escalate-btn').addEventListener('click', () => this._escalate());
@@ -827,6 +1062,139 @@
       requestAnimationFrame(() => { el.textContent = msg; });
     }
 
+    // ── Quick prompt chips (Multilingual Grounded Prompts) ───────────────────
+    _renderQuickChips() {
+      const bar = this._shadow.getElementById('quick-chips-bar');
+      if (!bar) return;
+      bar.innerHTML = '';
+      const prompts = GROUNDED_PROMPTS[this._lang] || GROUNDED_PROMPTS.en;
+      prompts.forEach(p => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'quick-chip';
+        btn.setAttribute('aria-label', p.text);
+        btn.textContent = `💡 ${p.label}`;
+        btn.addEventListener('click', () => {
+          triggerHaptic(40);
+          const input = this._shadow.getElementById('chat-input');
+          if (input) {
+            input.value = p.text;
+            this._sendMessage();
+          }
+        });
+        bar.appendChild(btn);
+      });
+    }
+
+    // ── Audio playback speed regulator ──────────────────────────────────────
+    _cycleSpeechRate() {
+      triggerHaptic(30);
+      const rates = [0.85, 1.0, 1.25];
+      const idx = rates.indexOf(this._speechRate);
+      this._speechRate = rates[(idx + 1) % rates.length];
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('bm-speech-rate', String(this._speechRate));
+      }
+      const btn = this._shadow.getElementById('rate-toggle');
+      if (btn) {
+        btn.textContent = `🔊 ${this._speechRate}x`;
+        btn.setAttribute('aria-label', `${this._strings.speechRate || 'Audio speed'}: ${this._speechRate}x`);
+      }
+      this._announce(`Speech rate set to ${this._speechRate}x`, 'polite');
+    }
+
+    // ── Simple mode toggle (5th-grade plain language and larger icons) ───────
+    _toggleSimple() {
+      triggerHaptic(30);
+      this._simpleMode = !this._simpleMode;
+      const panel = this._shadow.getElementById('panel');
+      const toggle = this._shadow.getElementById('simple-toggle');
+      if (panel) {
+        panel.classList.toggle('simple-mode-active', this._simpleMode);
+      }
+      if (toggle) {
+        toggle.setAttribute('aria-pressed', String(this._simpleMode));
+        toggle.textContent = this._simpleMode ? this._strings.simpleModeOff : this._strings.simpleMode;
+        toggle.setAttribute('aria-label', this._simpleMode ? this._strings.simpleModeOff : this._strings.simpleMode);
+      }
+      const statusText = this._simpleMode
+        ? 'Simple mode active: plain language, larger text and icons'
+        : 'Full mode active';
+      this._announce(statusText, 'polite');
+    }
+
+    // ── Hands-Free voice loop ───────────────────────────────────────────────
+    _toggleHandsFree() {
+      triggerHaptic([30, 40]);
+      this._handsFree = !this._handsFree;
+      const btn = this._shadow.getElementById('handsfree-btn');
+      if (btn) {
+        btn.setAttribute('aria-pressed', String(this._handsFree));
+        btn.classList.toggle('active', this._handsFree);
+        btn.setAttribute('aria-label', this._handsFree ? (this._strings.handsFreeOff || 'Disable Hands-Free') : (this._strings.handsFree || 'Hands-Free voice mode'));
+      }
+      const msg = this._handsFree
+        ? 'Hands-free voice mode active: assistant will listen and speak automatically'
+        : 'Hands-free voice mode disabled';
+      this._announce(msg, 'polite');
+      if (this._handsFree && !this._isListening) {
+        this._toggleVoice();
+      }
+    }
+
+    // ── Plain-Text / Braille transcript export ──────────────────────────────
+    _exportTranscript() {
+      triggerHaptic(40);
+      if (this._conversation.length === 0) {
+        this._announce('No messages to export yet', 'polite');
+        return;
+      }
+
+      const now = new Date();
+      const ethDate = formatEthiopicDate(now.toISOString());
+      const header = [
+        '=====================================================',
+        'BRIDGEMATE ACCESSIBILITY LEARNING ASSISTANT TRANSCRIPT',
+        `Language: ${this._lang.toUpperCase()}`,
+        `Date: ${now.toISOString()} (${ethDate})`,
+        'Specification: ALX Ethiopia Digital Bridge Hackathon',
+        'Accessibility: WCAG 2.2 Level AA / Proclamation 1156/2019',
+        '=====================================================',
+        '',
+        ''
+      ].join('\n');
+
+      const body = this._conversation.map(msg => {
+        const speaker = msg.role === 'user' ? '[LEARNER / ተጠቃሚ]' : '[BRIDGEMATE ASSISTANT / ረዳት]';
+        return `${speaker}\n${msg.content}\n`;
+      }).join('\n');
+
+      const footer = [
+        '',
+        '=====================================================',
+        'End of Plain-Text Braille & Offline Transcript',
+        '====================================================='
+      ].join('\n');
+
+      const fullText = `${header}${body}${footer}`;
+      const blob = new Blob([fullText], { type: 'text/plain;charset=utf-8' });
+
+      if (typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function') {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `bridgemate-transcript-${this._lang}-${Date.now()}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        if (typeof URL.revokeObjectURL === 'function') {
+          URL.revokeObjectURL(url);
+        }
+      }
+
+      this._announce('Transcript downloaded successfully for Braille and offline reading', 'polite');
+    }
+
     // ── Send message ─────────────────────────────────────────────────────────
     async _sendMessage() {
       const input = this._shadow.getElementById('chat-input');
@@ -834,6 +1202,8 @@
       if (!q) return;
       input.value = '';
       input.style.height = 'auto';
+
+      triggerHaptic(40);
 
       this._addMessage('user', q);
       this._conversation.push({ role: 'user', content: q });
@@ -851,10 +1221,15 @@
         this._removeMessage(loadingId);
         this._addMessage('assistant', answer.text, answer.sources);
         this._conversation.push({ role: 'assistant', content: answer.text });
+        triggerHaptic([30, 50, 30]);
         this._announce(this._strings.announcement, 'polite');
+        if (this._handsFree) {
+          this._speak(answer.text);
+        }
       } catch (err) {
         this._removeMessage(loadingId);
         this._addMessage('assistant', this._strings.error);
+        triggerHaptic([60, 40, 60, 40, 60]);
       }
     }
 
@@ -906,7 +1281,17 @@
 
       // Format text: bold **...** and line breaks
       const formatted = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-      div.innerHTML = `<span>${formatted}</span>`;
+
+      if (this._simpleMode && role === 'assistant') {
+        const sentences = text.split(/(?<=[.!?።])\s+/).filter(Boolean);
+        const icons = ['💡', '📌', '✅'];
+        const simplifiedHtml = sentences.slice(0, 3).map((s, idx) =>
+          `<div class="msg-simplified-point"><span aria-hidden="true">${icons[idx % icons.length]}</span> <span>${s.replace(/\*\*/g, '')}</span></div>`
+        ).join('');
+        div.innerHTML = `<div>${simplifiedHtml || formatted}</div>`;
+      } else {
+        div.innerHTML = `<span>${formatted}</span>`;
+      }
 
       if (sources.length > 0) {
         const src = document.createElement('div');
@@ -943,6 +1328,11 @@
       return id;
     }
 
+    async _escalateToPerson(btn) {
+      if (btn) btn.textContent = `⏳ ${this._strings.escalating}`;
+      await this._escalate();
+    }
+
     _removeMessage(id) {
       const el = this._shadow.getElementById(id);
       if (el) el.remove();
@@ -955,7 +1345,18 @@
       const utt = new SpeechSynthesisUtterance(text.replace(/\*\*/g, '').replace(/\n/g, ' '));
       const langMap = { am: 'am-ET', ti: 'ti-ET', om: 'om-ET', so: 'so-SO', ar: 'ar-SA', en: 'en-US' };
       utt.lang = langMap[this._lang] || 'en-US';
-      utt.rate = 0.9;
+      utt.rate = this._speechRate || (['am', 'ti'].includes(this._lang) ? 0.85 : 1.0);
+      if (this._handsFree) {
+        utt.onend = () => {
+          if (this._handsFree && this._isOpen) {
+            setTimeout(() => {
+              if (this._handsFree && this._isOpen && !this._isListening) {
+                this._toggleVoice();
+              }
+            }, 800);
+          }
+        };
+      }
       this._synth.speak(utt);
     }
 
@@ -974,7 +1375,15 @@
         const input = this._shadow.getElementById('chat-input');
         if (input) input.value = transcript;
       };
-      this._recognition.onend = () => this._setListening(false);
+      this._recognition.onend = () => {
+        this._setListening(false);
+        if (this._handsFree) {
+          const input = this._shadow.getElementById('chat-input');
+          if (input && (input.value || '').trim()) {
+            this._sendMessage();
+          }
+        }
+      };
       this._recognition.onerror = () => this._setListening(false);
     }
 
