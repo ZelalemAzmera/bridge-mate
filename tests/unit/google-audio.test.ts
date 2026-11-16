@@ -41,6 +41,43 @@ describe('Google AI Studio Audio (TTS & STT) Integration', () => {
     delete process.env.HASAB_API_KEY;
   });
 
+  it('GET /api/tts falls back to Google AI Studio Gemini TTS when Hasab is unavailable', async () => {
+    delete process.env.HASAB_API_KEY;
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY = 'test_google_key';
+    const originalFetch = global.fetch;
+
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  inlineData: {
+                    mimeType: 'audio/wav',
+                    data: Buffer.from('RIFF$   WAVEfmt     \x10   \x01 \x01 D\xac  D\xac  \x01 \x08 data    ').toString('base64'),
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      }),
+    } as any);
+
+    const req = new NextRequest('http://localhost:3000/api/tts?lang=am&text=በአዋጅ%201156%20አንቀጽ%2029%20መሠረት');
+    const res = await getTts(req);
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('X-TTS-Provider')).toBe('google-ai-studio');
+    expect(res.headers.get('Content-Type')).toBe('audio/wav');
+
+    global.fetch = originalFetch;
+    delete process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  });
+
   it('POST /api/transcribe processes audio with Hasab AI when HASAB_API_KEY is set', async () => {
     process.env.HASAB_API_KEY = 'test_hasab_key';
     const originalFetch = global.fetch;

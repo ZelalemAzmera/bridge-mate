@@ -1,47 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 
 export const runtime = 'nodejs';
 
 /**
- * Checks for high-fidelity pre-rendered Hasab AI audio assets (Amharic, Afaan Oromoo, Tigrinya, Somali).
- * Provides immediate zero-latency, token-free native audio for greetings and core curriculum responses.
- */
-function getCachedHasabAudio(lang: string, text: string): Buffer | null {
-  const normalizedText = (text || '').toLowerCase();
-  const isGreetingOrRights =
-    normalizedText.includes('እንኳን') ||
-    normalizedText.includes('እንቋዕ') ||
-    normalizedText.includes('baga') ||
-    normalizedText.includes('nagaan') ||
-    normalizedText.includes('kusoo') ||
-    normalizedText.includes('dhawoow') ||
-    normalizedText.includes('ሰላም') ||
-    normalizedText.includes('bridge mate') ||
-    normalizedText.includes('bridgemate') ||
-    normalizedText.includes('ብሪጅሜት') ||
-    normalizedText.includes('ማመቻቸት') ||
-    normalizedText.includes('1156') ||
-    normalizedText.includes('29');
-
-  const langKey = ['am', 'ti', 'om', 'so'].includes(lang) ? lang : (/[\u1200-\u137F]/.test(text) ? 'am' : '');
-  if (!langKey) return null;
-
-  const filePath = path.join(process.cwd(), 'public', 'audio', 'hasab', `welcome-${langKey}.wav`);
-  if (isGreetingOrRights && fs.existsSync(filePath)) {
-    try {
-      return fs.readFileSync(filePath);
-    } catch {
-      return null;
-    }
-  }
-
-  return null;
-}
-
-/**
- * Wraps raw 16-bit mono 24kHz PCM buffer from Gemini 2.0 Flash Audio in a standard RIFF WAV header
+ * Wraps raw 16-bit mono 24kHz PCM buffer from Gemini Audio in a standard RIFF WAV header
  * so that any browser or HTML5 <audio> element plays it natively without client-side decoding.
  */
 function pcmToWav(pcmBuffer: Buffer, sampleRate = 24000, numChannels = 1, bitsPerSample = 16): Buffer {
@@ -68,7 +30,7 @@ function pcmToWav(pcmBuffer: Buffer, sampleRate = 24000, numChannels = 1, bitsPe
 
 /**
  * Synthesizes expressive native speech via Hasab AI (Addis Ababa, Ethiopia).
- * Supports Amharic (amh), Afaan Oromoo (oro), Tigrinya (tir), and English (eng).
+ * Supports Amharic (amh), Afaan Oromoo (oro), Tigrinya (tir), Somali (som), and English (eng).
  */
 async function generateHasabAIAudio(text: string, lang: string, apiKey: string): Promise<Buffer | null> {
   const langCodeMap: Record<string, string> = {
@@ -110,8 +72,8 @@ async function generateHasabAIAudio(text: string, lang: string, apiKey: string):
 }
 
 /**
- * Attempts to generate natural, expressive speech via Google AI Studio's Gemini 2.0 Flash Audio output.
- * Tries primary and experimental checkpoints for maximum availability.
+ * Generates natural, expressive speech via Google AI Studio's Gemini Multimodal Audio (TTS).
+ * Uses candidate models (gemini-3.8-flash-lite-tts, gemini-3.8-flash-tts, gemini-2.5-flash-preview-tts).
  */
 async function generateGoogleAIStudioAudio(text: string, lang: string, apiKey: string): Promise<Buffer | null> {
   const langNames: Record<string, string> = {
@@ -126,7 +88,12 @@ async function generateGoogleAIStudioAudio(text: string, lang: string, apiKey: s
 
   const prompt = `You are a supportive, warm accessibility learning tutor for Ethiopian students. Please read aloud the following text in ${languageName} with clear articulation, natural breathing, and a warm tone. Speak ONLY the exact words provided without preamble, commentary, or quotes:\n\n"${text}"`;
 
-  const candidateModels = ['gemini-2.0-flash', 'gemini-2.0-flash-exp'];
+  const candidateModels = [
+    'gemini-3.8-flash-lite-tts',
+    'gemini-3.8-flash-tts',
+    'gemini-2.5-flash-preview-tts',
+    'gemini-2.0-flash-exp',
+  ];
 
   for (const model of candidateModels) {
     try {
@@ -146,13 +113,13 @@ async function generateGoogleAIStudioAudio(text: string, lang: string, apiKey: s
             speechConfig: {
               voiceConfig: {
                 prebuiltVoiceConfig: {
-                  voiceName: 'Puck', // Natural, warm conversational voice
+                  voiceName: 'Puck',
                 },
               },
             },
           },
         }),
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(10000),
       });
 
       if (!response.ok) {
@@ -199,19 +166,7 @@ export async function GET(req: NextRequest) {
       .trim()
       .slice(0, 300);
 
-    // 1. TIER 1A: Cached High-Fidelity Hasab AI Audio Asset (Zero-token native speech)
-    const cachedAsset = getCachedHasabAudio(lang, sanitizedText);
-    if (cachedAsset) {
-      return new NextResponse(new Uint8Array(cachedAsset), {
-        headers: {
-          'Content-Type': 'audio/wav',
-          'Cache-Control': 'public, max-age=86400, s-maxage=86400',
-          'X-TTS-Provider': 'hasab-ai-asset',
-        },
-      });
-    }
-
-    // 1. TIER 1B: Native Ethiopian Voice via Hasab AI (Addis Ababa)
+    // 1. TIER 1: Native Ethiopian Voice via Hasab AI (Addis Ababa)
     const hasabApiKey = process.env.HASAB_API_KEY;
     if (hasabApiKey && !hasabApiKey.toLowerCase().includes('mock') && hasabApiKey.trim() !== '') {
       try {
@@ -230,7 +185,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 2. TIER 2: Google AI Studio Gemini 2.0 Flash Audio (if API key is configured)
+    // 2. TIER 2: Google AI Studio Gemini Flash TTS (Latest High-Fidelity Audio)
     const googleApiKey =
       process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
       process.env.GEMINI_API_KEY ||
@@ -282,11 +237,10 @@ export async function GET(req: NextRequest) {
       console.warn('[TTS Server Edge Fetch Error]:', err);
     }
 
-    // 3. TIER 3: Client Direct Stream Redirect (bypasses serverless datacenter IP blocks)
+    // 3. TIER 3 Fallback: Client Direct Stream Redirect (bypasses serverless datacenter IP blocks)
     return NextResponse.redirect(googleTtsUrl, 307);
   } catch (error: any) {
     console.error('[TTS API Error]:', error);
-    // Even on server exception, redirect client to public TTS stream so audio never fails silently
     const { searchParams } = new URL(req.url);
     const text = searchParams.get('text') || '';
     const lang = searchParams.get('lang') || 'am';
