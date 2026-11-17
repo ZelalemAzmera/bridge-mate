@@ -130,7 +130,7 @@ export function useSpeechSynthesis() {
 
       if (isLocalLang) {
         const encoded = encodeURIComponent(cleanText);
-        const primaryUrl = `/api/tts?lang=${effectiveLang}&text=${encoded}`;
+        const primaryUrl = `/api/tts?lang=${effectiveLang}&text=${encoded}&v=3`;
         const directUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${effectiveLang === 'en' ? 'en' : 'am'}&q=${encoded}`;
         playWithResilience(primaryUrl, directUrl);
         return;

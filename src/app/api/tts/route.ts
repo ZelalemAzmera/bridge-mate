@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 
 export const runtime = 'nodejs';
 
@@ -26,6 +28,53 @@ function pcmToWav(pcmBuffer: Buffer, sampleRate = 24000, numChannels = 1, bitsPe
   wavHeader.writeUInt32LE(pcmBuffer.length, 40);
 
   return Buffer.concat([wavHeader, pcmBuffer]);
+}
+
+/**
+ * Checks for genuine pre-rendered Hasab AI audio for canonical welcome messages.
+ * Only triggers on specific greeting openings to provide instant 0ms latency playback,
+ * preventing browser MediaElement timeouts on slow networks.
+ */
+function getPreRenderedWelcomeAudio(lang: string, text: string): Buffer | null {
+  const normalized = (text || '').trim();
+
+  const isAmharicWelcome =
+    (lang === 'am' || /[\u1200-\u137F]/.test(normalized)) &&
+    (normalized.includes('እንኳን ወደ ብሪጅሜት') ||
+      (normalized.includes('እንኳን') && normalized.includes('በደህና መጡ')));
+
+  const isTigrinyaWelcome =
+    lang === 'ti' &&
+    (normalized.includes('እንቋዕ ብደሓን መጻእኩም') || normalized.includes('እንቋዕ'));
+
+  const isOromoWelcome =
+    lang === 'om' &&
+    (normalized.toLowerCase().includes('baga nagaan gara bridgemate') ||
+      normalized.toLowerCase().includes('baga nagaan'));
+
+  const isSomaliWelcome =
+    lang === 'so' &&
+    (normalized.toLowerCase().includes('kusoo dhawoow') ||
+      normalized.toLowerCase().includes('dhawoow bridgemate'));
+
+  let langKey = '';
+  if (isAmharicWelcome) langKey = 'am';
+  else if (isTigrinyaWelcome) langKey = 'ti';
+  else if (isOromoWelcome) langKey = 'om';
+  else if (isSomaliWelcome) langKey = 'so';
+
+  if (!langKey) return null;
+
+  const filePath = path.join(process.cwd(), 'public', 'audio', 'welcome', `welcome-${langKey}.wav`);
+  if (fs.existsSync(filePath)) {
+    try {
+      return fs.readFileSync(filePath);
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -166,6 +215,20 @@ export async function GET(req: NextRequest) {
       .trim()
       .slice(0, 300);
 
+    // 0. Instant Welcome Audio (Pristine Hasab AI Pre-rendered Audio)
+    const welcomeAudio = getPreRenderedWelcomeAudio(lang, sanitizedText);
+    if (welcomeAudio && welcomeAudio.length > 0) {
+      return new NextResponse(new Uint8Array(welcomeAudio), {
+        headers: {
+          'Content-Type': 'audio/wav',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+          'X-TTS-Provider': 'hasab-ai-welcome',
+        },
+      });
+    }
+
     // 1. TIER 1: Native Ethiopian Voice via Hasab AI (Addis Ababa)
     const hasabApiKey = process.env.HASAB_API_KEY;
     if (hasabApiKey && !hasabApiKey.toLowerCase().includes('mock') && hasabApiKey.trim() !== '') {
@@ -175,7 +238,9 @@ export async function GET(req: NextRequest) {
           return new NextResponse(new Uint8Array(hasabAudio), {
             headers: {
               'Content-Type': 'audio/wav',
-              'Cache-Control': 'public, max-age=86400, s-maxage=86400',
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0',
               'X-TTS-Provider': 'hasab-ai',
             },
           });
@@ -199,7 +264,9 @@ export async function GET(req: NextRequest) {
           return new NextResponse(new Uint8Array(studioAudio), {
             headers: {
               'Content-Type': 'audio/wav',
-              'Cache-Control': 'public, max-age=86400, s-maxage=86400',
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0',
               'X-TTS-Provider': 'google-ai-studio',
             },
           });
@@ -216,7 +283,8 @@ export async function GET(req: NextRequest) {
     try {
       const response = await fetch(googleTtsUrl, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           'Referer': 'https://translate.google.com/',
         },
         signal: AbortSignal.timeout(6000),
@@ -228,7 +296,9 @@ export async function GET(req: NextRequest) {
         return new NextResponse(audioBuffer, {
           headers: {
             'Content-Type': 'audio/mpeg',
-            'Cache-Control': 'public, max-age=86400, s-maxage=86400',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
             'X-TTS-Provider': 'google-translate-edge',
           },
         });
@@ -245,6 +315,9 @@ export async function GET(req: NextRequest) {
     const text = searchParams.get('text') || '';
     const lang = searchParams.get('lang') || 'am';
     const safeText = encodeURIComponent(text.slice(0, 200));
-    return NextResponse.redirect(`https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${lang}&q=${safeText}`, 307);
+    return NextResponse.redirect(
+      `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${lang}&q=${safeText}`,
+      307
+    );
   }
 }

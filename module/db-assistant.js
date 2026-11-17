@@ -1384,7 +1384,7 @@
       if (isLocalLang) {
         try {
           const apiEndpoint = this._apiBase ? `${this._apiBase}/tts` : '/api/tts';
-          const audioUrl = `${apiEndpoint}?lang=${this._lang || 'am'}&text=${encodeURIComponent(cleanText)}`;
+          const audioUrl = `${apiEndpoint}?lang=${this._lang || 'am'}&text=${encodeURIComponent(cleanText)}&v=3`;
           const audio = new Audio(audioUrl);
           this._activeAudio = audio;
 

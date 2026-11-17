@@ -94,6 +94,82 @@ app.get('/health', (_req, res) => {
   });
 });
 
+// ── GET /api/tts (Audio Stream: Hasab AI / Welcome Assets / Google Edge) ─────
+app.get(['/api/tts', '/tts'], async (req, res) => {
+  const text = (req.query.text || '').trim();
+  const lang = (req.query.lang || 'am').trim();
+
+  if (!text) {
+    return res.status(400).send('Text is required');
+  }
+
+  const sanitizedText = text
+    .replace(/\[Source:.*?\]/g, '')
+    .replace(/[*_#`~>]/g, '')
+    .trim()
+    .slice(0, 300);
+
+  // Check pre-rendered welcome assets
+  const welcomeDir = path.join(__dirname, '..', 'public', 'audio', 'welcome');
+  const normalized = sanitizedText;
+  let welcomeFile = null;
+  if ((lang === 'am' || /[\u1200-\u137F]/.test(normalized)) && (normalized.includes('እንኳን ወደ ብሪጅሜት') || (normalized.includes('እንኳን') && normalized.includes('በደህና መጡ')))) {
+    welcomeFile = path.join(welcomeDir, 'welcome-am.wav');
+  } else if (lang === 'ti' && (normalized.includes('እንቋዕ ብደሓን መጻእኩም') || normalized.includes('እንቋዕ'))) {
+    welcomeFile = path.join(welcomeDir, 'welcome-ti.wav');
+  } else if (lang === 'om' && (normalized.toLowerCase().includes('baga nagaan gara bridgemate') || normalized.toLowerCase().includes('baga nagaan'))) {
+    welcomeFile = path.join(welcomeDir, 'welcome-om.wav');
+  } else if (lang === 'so' && (normalized.toLowerCase().includes('kusoo dhawoow') || normalized.toLowerCase().includes('dhawoow bridgemate'))) {
+    welcomeFile = path.join(welcomeDir, 'welcome-so.wav');
+  }
+
+  if (welcomeFile && fs.existsSync(welcomeFile)) {
+    res.set({
+      'Content-Type': 'audio/wav',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'X-TTS-Provider': 'hasab-ai-welcome'
+    });
+    return fs.createReadStream(welcomeFile).pipe(res);
+  }
+
+  // 1. Try Hasab AI if key configured
+  const hasabApiKey = process.env.HASAB_API_KEY;
+  if (hasabApiKey && !hasabApiKey.toLowerCase().includes('mock')) {
+    try {
+      const langCodeMap = { am: 'amh', om: 'oro', ti: 'tir', so: 'som', en: 'eng' };
+      const speakerMap = { om: 'Haile', ti: 'Aster', so: 'Selam', am: 'Selam', en: 'Selam' };
+      const hasabRes = await fetch('https://api.hasab.ai/api/v1/tts/synthesize', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${hasabApiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          text: sanitizedText,
+          language: langCodeMap[lang] || 'amh',
+          speaker_name: speakerMap[lang] || 'Selam'
+        }),
+        signal: AbortSignal.timeout(12000)
+      });
+      if (hasabRes.ok) {
+        const audioBuf = Buffer.from(await hasabRes.arrayBuffer());
+        res.set({
+          'Content-Type': 'audio/wav',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'X-TTS-Provider': 'hasab-ai'
+        });
+        return res.send(audioBuf);
+      }
+    } catch (e) {
+      console.warn('[Hasab AI TTS fallback]:', e.message);
+    }
+  }
+
+  // 2. Fallback to Google Translate edge redirect
+  const ttsLang = lang === 'en' ? 'en' : 'am';
+  return res.redirect(`https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${ttsLang}&q=${encodeURIComponent(sanitizedText)}`);
+});
+
 // ── POST /api/v1/ask ──────────────────────────────────────────────────────────
 app.post('/api/v1/ask', async (req, res) => {
   const { question, language = 'en' } = req.body || {};

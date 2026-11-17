@@ -1,8 +1,9 @@
-# BridgeMate — Track 3: Multilingual Assistant and Live Help
+# BridgeMate, Track 3 (Multilingual Assistant and Live Help), BridgeMate Engineering Team, Selamawit Tadesse
 
+**Module**: `<db-assistant>`  
+**Track**: Track 3 — Multilingual assistant and live help  
 **Team**: BridgeMate Engineering Team  
 **Co-designer**: Selamawit Tadesse (Visually Impaired Ethiopian Learner & Accessibility Consultant)  
-**Track**: Track 3 — Multilingual assistant and live help  
 **Starter Baseline**: [github.com/alx-africa/Savanna-static-pages](https://github.com/alx-africa/Savanna-static-pages)  
 **Standard**: WCAG 2.2 Level AA · Zero Paid-API Lock-in
 
