@@ -137,7 +137,7 @@ export function ChatInput({
   const [transcriptPreview, setTranscriptPreview] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const { isListening, isSupported, startListening, stopListening } = useSpeechRecognition(
+  const { isListening, isTranscribing, isSupported, provider, startListening, stopListening } = useSpeechRecognition(
     (transcript) => {
       setTranscriptPreview(transcript);
       setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
@@ -208,6 +208,13 @@ export function ChatInput({
             <span className="font-bold text-emerald-900 dark:text-emerald-200">
               {i18n.transcriptFound}
             </span>
+            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300">
+              {provider === 'hasab-ai'
+                ? '⚡ Hasab AI STT'
+                : provider === 'google-ai-studio'
+                ? '🌐 Google AI Studio STT'
+                : '🎙️ Speech Engine'}
+            </span>
             <span className="italic text-emerald-800 dark:text-emerald-300">&ldquo;{transcriptPreview}&rdquo;</span>
           </div>
 
@@ -250,15 +257,25 @@ export function ChatInput({
           <button
             type="button"
             onClick={toggleRecording}
+            disabled={isTranscribing}
             aria-pressed={isListening}
             className={`min-h-[44px] min-w-[44px] px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] ${
-              isListening
+              isTranscribing
+                ? 'bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200'
+                : isListening
                 ? 'bg-red-600 text-white shadow-md animate-pulse'
                 : 'bg-[var(--bg-subtle)] text-[var(--text-primary)] hover:bg-[var(--bg-canvas)] border border-[var(--border-default)]'
             }`}
-            aria-label={isListening ? i18n.voiceAriaStop : i18n.voiceAriaStart}
+            aria-label={isTranscribing ? 'Transcribing...' : isListening ? i18n.voiceAriaStop : i18n.voiceAriaStart}
           >
-            {isListening ? (
+            {isTranscribing ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-amber-600 dark:text-amber-400 shrink-0" aria-hidden="true" />
+                <span className="font-bold text-[11px]">
+                  {language === 'am' ? 'በሐሰብ ኤአይ በማዳመጥ ላይ...' : 'Hasab AI Processing...'}
+                </span>
+              </>
+            ) : isListening ? (
               <>
                 <MicOff className="w-4 h-4 shrink-0" aria-hidden="true" />
                 <div className="flex items-center gap-0.5 h-4 px-1" aria-hidden="true">

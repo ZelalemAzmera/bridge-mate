@@ -18,6 +18,7 @@ import {
   LogIn,
   LogOut,
   ChevronDown,
+  FileCode2,
 } from 'lucide-react';
 
 export function Header() {
@@ -102,6 +103,13 @@ export function Header() {
       labelEn: 'Telegram & 2G',
       icon: Bot,
       match: ['/telegram', '/low-bandwidth'],
+    },
+    {
+      href: '/docs',
+      labelAm: 'ሰነዶች',
+      labelEn: 'Docs',
+      icon: FileCode2,
+      match: ['/docs', '/doc', '/developers'],
     },
   ];
 

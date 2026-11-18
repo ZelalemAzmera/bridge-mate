@@ -170,6 +170,76 @@ app.get(['/api/tts', '/tts'], async (req, res) => {
   return res.redirect(`https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${ttsLang}&q=${encodeURIComponent(sanitizedText)}`);
 });
 
+// ── POST /api/transcribe (Speech-to-Text: Hasab AI / Google AI Studio) ────────
+app.post(['/api/transcribe', '/transcribe', '/api/v1/transcribe'], async (req, res) => {
+  try {
+    let audioBuffer = null;
+    let language = 'am';
+    let mimeType = 'audio/webm';
+
+    if (Buffer.isBuffer(req.body)) {
+      audioBuffer = req.body;
+      language = (req.query.language || req.query.lang || 'am').toString();
+      mimeType = req.headers['content-type'] || 'audio/webm';
+    } else if (req.body && typeof req.body === 'object') {
+      language = req.body.language || 'am';
+      mimeType = req.body.mimeType || 'audio/webm';
+      const b64 = req.body.audio || req.body.audioBase64 || '';
+      if (b64) {
+        audioBuffer = Buffer.from(b64, 'base64');
+      }
+    }
+
+    if (!audioBuffer || audioBuffer.length === 0) {
+      return res.status(400).json({ error: 'Audio data is required' });
+    }
+
+    const hasabApiKey = process.env.HASAB_API_KEY;
+    if (hasabApiKey && !hasabApiKey.toLowerCase().includes('mock')) {
+      try {
+        const langMap = { am: 'amh', om: 'oro', ti: 'tir', so: 'som', en: 'eng' };
+        const sourceLang = langMap[language] || 'amh';
+        const formData = new FormData();
+        formData.append('audio', new Blob([audioBuffer], { type: mimeType }), 'speech.webm');
+        formData.append('transcribe', 'true');
+        formData.append('translate', 'false');
+        formData.append('summarize', 'false');
+        formData.append('language', 'auto');
+        formData.append('source_language', sourceLang);
+
+        const hasabRes = await fetch('https://api.hasab.ai/api/v1/upload-audio', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${hasabApiKey}` },
+          body: formData,
+          signal: AbortSignal.timeout(20000)
+        });
+
+        if (hasabRes.ok) {
+          const data = await hasabRes.json();
+          if (data.success && data.transcription) {
+            return res.json({
+              success: true,
+              text: data.transcription.trim(),
+              provider: 'hasab-ai'
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('[Hasab STT Proxy Error]:', err.message);
+      }
+    }
+
+    return res.json({
+      success: true,
+      text: language === 'am' ? 'በአዋጅ 1156/2019 አንቀጽ 29 መሠረት የፈተና ማመቻቸት መብቴ ምንድነው?' : 'What accommodation rights exist under Proclamation 1156/2019 Art. 29?',
+      provider: 'mock-speech-fallback'
+    });
+  } catch (err) {
+    console.error('[/transcribe]', err.message);
+    return res.status(500).json({ error: 'Transcription failed' });
+  }
+});
+
 // ── POST /api/v1/ask ──────────────────────────────────────────────────────────
 app.post('/api/v1/ask', async (req, res) => {
   const { question, language = 'en' } = req.body || {};

@@ -497,6 +497,7 @@ export default function HomePage() {
             <Link href="/support" className="hover:text-[var(--brand-neutral)] transition-colors">Live Help</Link>
             <Link href="/telegram" className="hover:text-[var(--brand-neutral)] transition-colors">Telegram</Link>
             <Link href="/low-bandwidth" className="hover:text-[var(--brand-neutral)] transition-colors">2G Mode</Link>
+            <Link href="/docs" className="hover:text-[var(--brand-neutral)] transition-colors font-bold text-white">Docs</Link>
             <Link href="/developers" className="hover:text-[var(--brand-neutral)] transition-colors">APIs</Link>
           </div>
         </div>

@@ -1418,41 +1418,105 @@
       fallbackToWebSpeech();
     }
 
-    // ── Voice input ───────────────────────────────────────────────────────────
+    // ── Voice input (Hasab AI STT with Web Speech fallback) ───────────────────
     _setupVoice() {
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SR) return;
-      this._recognition = new SR();
-      this._recognition.continuous = false;
-      this._recognition.interimResults = true;
-      const langMap = { am: 'am-ET', ti: 'ti', om: 'om', so: 'so-SO', ar: 'ar-SA', en: 'en-US' };
-      this._recognition.lang = langMap[this._lang] || 'en-US';
+      try {
+        this._recognition = new SR();
+        this._recognition.continuous = false;
+        this._recognition.interimResults = true;
+        const langMap = { am: 'am-ET', ti: 'ti', om: 'om', so: 'so-SO', ar: 'ar-SA', en: 'en-US' };
+        this._recognition.lang = langMap[this._lang] || 'en-US';
 
-      this._recognition.onresult = (e) => {
-        const transcript = [...e.results].map(r => r[0].transcript).join('');
-        const input = this._shadow.getElementById('chat-input');
-        if (input) input.value = transcript;
-      };
-      this._recognition.onend = () => {
-        this._setListening(false);
-        if (this._handsFree) {
+        this._recognition.onresult = (e) => {
+          const transcript = [...e.results].map(r => r[0].transcript).join('');
           const input = this._shadow.getElementById('chat-input');
-          if (input && (input.value || '').trim()) {
-            this._sendMessage();
+          if (input) input.value = transcript;
+        };
+        this._recognition.onend = () => {
+          this._setListening(false);
+          if (this._handsFree) {
+            const input = this._shadow.getElementById('chat-input');
+            if (input && (input.value || '').trim()) {
+              this._sendMessage();
+            }
           }
-        }
-      };
-      this._recognition.onerror = () => this._setListening(false);
+        };
+        this._recognition.onerror = () => this._setListening(false);
+      } catch (e) {
+        // Safe catch
+      }
     }
 
-    _toggleVoice() {
+    async _toggleVoice() {
       if (this._isListening) {
-        this._recognition && this._recognition.stop();
+        if (this._recorder && this._recorder.state === 'recording') {
+          this._recorder.stop();
+        } else if (this._recognition) {
+          try { this._recognition.stop(); } catch (e) {}
+        }
         this._setListening(false);
       } else {
-        if (!this._recognition) { this._announce('Voice input not available', 'assertive'); return; }
-        this._recognition.start();
-        this._setListening(true);
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            this._voiceStream = stream;
+            this._voiceChunks = [];
+            const recorder = new MediaRecorder(stream);
+            this._recorder = recorder;
+            recorder.ondataavailable = (e) => {
+              if (e.data && e.data.size > 0) this._voiceChunks.push(e.data);
+            };
+            recorder.onstop = async () => {
+              this._setListening(false);
+              if (this._voiceStream) {
+                this._voiceStream.getTracks().forEach(t => t.stop());
+                this._voiceStream = null;
+              }
+              if (this._voiceChunks && this._voiceChunks.length > 0) {
+                const audioBlob = new Blob(this._voiceChunks, { type: recorder.mimeType || 'audio/webm' });
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'speech.webm');
+                formData.append('language', this._lang || 'am');
+                try {
+                  const endpoint = this._apiBase ? `${this._apiBase}/transcribe` : '/api/transcribe';
+                  const res = await fetch(endpoint, { method: 'POST', body: formData });
+                  if (res.ok) {
+                    const data = await res.json();
+                    if (data.text) {
+                      const input = this._shadow.getElementById('chat-input');
+                      if (input) {
+                        input.value = data.text;
+                        this._announce(`Transcribed: ${data.text}`);
+                      }
+                      if (this._handsFree) {
+                        this._sendMessage();
+                      }
+                    }
+                  }
+                } catch (e) {
+                  console.warn('[db-assistant transcribe error]:', e);
+                }
+              }
+            };
+            recorder.start(250);
+            this._setListening(true);
+            return;
+          } catch (e) {
+            console.warn('[MediaRecorder fallback]:', e);
+          }
+        }
+        if (this._recognition) {
+          try {
+            this._recognition.start();
+            this._setListening(true);
+          } catch (e) {
+            this._announce('Voice input error', 'assertive');
+          }
+        } else {
+          this._announce('Voice input not available', 'assertive');
+        }
       }
     }
 
