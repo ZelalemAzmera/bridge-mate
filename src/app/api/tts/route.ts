@@ -38,6 +38,9 @@ function pcmToWav(pcmBuffer: Buffer, sampleRate = 24000, numChannels = 1, bitsPe
 function getPreRenderedWelcomeAudio(lang: string, text: string): Buffer | null {
   const normalized = (text || '').trim();
 
+  // Only apply to short greeting openers under 120 chars to avoid capturing long chat responses
+  if (normalized.length > 120) return null;
+
   const isAmharicWelcome =
     (lang === 'am' || /[\u1200-\u137F]/.test(normalized)) &&
     (normalized.includes('እንኳን ወደ ብሪጅሜት') ||
@@ -122,26 +125,14 @@ async function generateHasabAIAudio(text: string, lang: string, apiKey: string):
 
 /**
  * Generates natural, expressive speech via Google AI Studio's Gemini Multimodal Audio (TTS).
- * Uses candidate models (gemini-3.8-flash-lite-tts, gemini-3.8-flash-tts, gemini-2.5-flash-preview-tts).
+ * Uses candidate models (gemini-3.8-flash-tts, gemini-3.8-flash-lite-tts).
+ * Crucial: Passes ONLY the verbatim chat response without any system prompt instructions,
+ * preventing Gemini from reciting instructions out loud.
  */
 async function generateGoogleAIStudioAudio(text: string, lang: string, apiKey: string): Promise<Buffer | null> {
-  const langNames: Record<string, string> = {
-    am: 'Amharic (አማርኛ)',
-    om: 'Afaan Oromoo',
-    ti: 'Tigrinya (ትግርኛ)',
-    so: 'Somali',
-    ar: 'Arabic',
-    en: 'English',
-  };
-  const languageName = langNames[lang] || 'Amharic';
-
-  const prompt = `You are a supportive, warm accessibility learning tutor for Ethiopian students. Please read aloud the following text in ${languageName} with clear articulation, natural breathing, and a warm tone. Speak ONLY the exact words provided without preamble, commentary, or quotes:\n\n"${text}"`;
-
   const candidateModels = [
-    'gemini-3.8-flash-lite-tts',
     'gemini-3.8-flash-tts',
-    'gemini-2.5-flash-preview-tts',
-    'gemini-2.0-flash-exp',
+    'gemini-3.8-flash-lite-tts',
   ];
 
   for (const model of candidateModels) {
@@ -154,7 +145,7 @@ async function generateGoogleAIStudioAudio(text: string, lang: string, apiKey: s
         body: JSON.stringify({
           contents: [
             {
-              parts: [{ text: prompt }],
+              parts: [{ text }],
             },
           ],
           generationConfig: {

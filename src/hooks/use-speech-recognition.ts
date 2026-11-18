@@ -9,7 +9,7 @@ export function useSpeechRecognition(
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [provider, setProvider] = useState<string>('hasab-ai');
+  const [provider, setProvider] = useState<string>('web-speech');
 
   const recognitionRef = useRef<any>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -17,18 +17,26 @@ export function useSpeechRecognition(
   const streamRef = useRef<MediaStream | null>(null);
   const currentLangRef = useRef<string>('am');
   const autoStopTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const vadIntervalRef = useRef<any>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const hasMediaDevices =
-        typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia;
       const hasWebSpeech =
         'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
-      setIsSupported(hasMediaDevices || hasWebSpeech);
+      const hasMediaDevices =
+        typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia;
+      setIsSupported(hasWebSpeech || hasMediaDevices);
     }
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
+      }
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        audioContextRef.current.close().catch(() => {});
+      }
+      if (vadIntervalRef.current) {
+        clearInterval(vadIntervalRef.current);
       }
     };
   }, []);
@@ -38,20 +46,28 @@ export function useSpeechRecognition(
       clearTimeout(autoStopTimeoutRef.current);
       autoStopTimeoutRef.current = null;
     }
+    if (vadIntervalRef.current) {
+      clearInterval(vadIntervalRef.current);
+      vadIntervalRef.current = null;
+    }
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      audioContextRef.current.close().catch(() => {});
+      audioContextRef.current = null;
+    }
 
-    // 1. MediaRecorder Stop (Primary Hasab AI STT pipeline)
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+    // 1. Web Speech API Stop
+    if (recognitionRef.current) {
       try {
-        mediaRecorderRef.current.stop();
+        recognitionRef.current.stop();
       } catch {
         // Safe catch
       }
     }
 
-    // 2. Web Speech API Stop (Fallback)
-    if (recognitionRef.current) {
+    // 2. MediaRecorder Stop
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       try {
-        recognitionRef.current.stop();
+        mediaRecorderRef.current.stop();
       } catch {
         // Safe catch
       }
@@ -64,14 +80,84 @@ export function useSpeechRecognition(
     async (lang = 'am') => {
       if (typeof window === 'undefined') return;
 
+      stopListening();
+
       // Extract 2-letter base language: 'am-ET' -> 'am', 'ti-ET' -> 'ti', etc.
       const normalizedLang = lang.split('-')[0].toLowerCase();
       currentLangRef.current = normalizedLang;
 
-      // TIER 1: Native High-Fidelity Recording for Hasab AI STT (/api/transcribe)
+      const bcp47Map: Record<string, string> = {
+        am: 'am-ET',
+        ti: 'ti-ET',
+        om: 'om-ET',
+        so: 'so-ET',
+        ar: 'ar-SA',
+        en: 'en-US',
+      };
+      const bcpLang = bcp47Map[normalizedLang] || lang || 'am-ET';
+
+      // TIER 1: Browser Web Speech API (Chrome, Edge, Samsung Internet, Android)
+      // Instant streaming recognition with automatic pause/silence detection ("like before")
+      const SpeechRecognitionClass =
+        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+      if (SpeechRecognitionClass) {
+        try {
+          const recognition = new SpeechRecognitionClass();
+          recognitionRef.current = recognition;
+          recognition.continuous = false; // Automatically stops when user pauses speaking
+          recognition.interimResults = true; // Real-time feedback with zero lag
+          recognition.lang = bcpLang;
+
+          recognition.onstart = () => {
+            setIsListening(true);
+            setIsTranscribing(false);
+          };
+
+          let finalTranscript = '';
+          recognition.onresult = (event: any) => {
+            let interim = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+              const res = event.results[i];
+              if (res.isFinal) {
+                finalTranscript += res[0].transcript;
+              } else {
+                interim += res[0].transcript;
+              }
+            }
+            const activeText = (finalTranscript || interim || '').trim();
+            if (activeText) {
+              setTranscript(activeText);
+              setProvider('web-speech');
+              if (onResult) {
+                onResult(activeText, 'web-speech');
+              }
+            }
+          };
+
+          recognition.onerror = (e: any) => {
+            console.warn('[Web Speech Recognition Error]:', e.error);
+            setIsListening(false);
+            setIsTranscribing(false);
+          };
+
+          recognition.onend = () => {
+            setIsListening(false);
+            setIsTranscribing(false);
+          };
+
+          recognition.start();
+          return;
+        } catch (speechErr) {
+          console.warn('[Web Speech start failed, falling back to MediaRecorder]:', speechErr);
+        }
+      }
+
+      // TIER 2: MediaRecorder with Web Audio Voice Activity Detection (VAD)
+      // Used in Safari, Firefox, or when Web Speech is unavailable.
+      // Automatically detects when user stops speaking via volume RMS analysis.
       if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
         try {
-          // Stop any previous stream
           if (streamRef.current) {
             streamRef.current.getTracks().forEach((t) => t.stop());
             streamRef.current = null;
@@ -86,14 +172,13 @@ export function useSpeechRecognition(
           });
           streamRef.current = stream;
 
-          // Determine preferred MIME type
           let mimeType = 'audio/webm;codecs=opus';
           if (!MediaRecorder.isTypeSupported(mimeType)) {
             mimeType = MediaRecorder.isTypeSupported('audio/webm')
               ? 'audio/webm'
               : MediaRecorder.isTypeSupported('audio/mp4')
-              ? 'audio/mp4'
-              : '';
+                ? 'audio/mp4'
+                : '';
           }
 
           const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
@@ -113,6 +198,14 @@ export function useSpeechRecognition(
 
           recorder.onstop = async () => {
             setIsListening(false);
+            if (vadIntervalRef.current) {
+              clearInterval(vadIntervalRef.current);
+              vadIntervalRef.current = null;
+            }
+            if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+              audioContextRef.current.close().catch(() => {});
+              audioContextRef.current = null;
+            }
             if (streamRef.current) {
               streamRef.current.getTracks().forEach((t) => t.stop());
               streamRef.current = null;
@@ -131,8 +224,8 @@ export function useSpeechRecognition(
                 audioBlob.type.includes('mp4') || audioBlob.type.includes('m4a')
                   ? 'm4a'
                   : audioBlob.type.includes('wav')
-                  ? 'wav'
-                  : 'webm';
+                    ? 'wav'
+                    : 'webm';
               const formData = new FormData();
               formData.append('audio', audioBlob, `speech.${ext}`);
               formData.append('language', currentLangRef.current);
@@ -153,73 +246,69 @@ export function useSpeechRecognition(
                 }
               }
             } catch (err) {
-              console.warn('[Hasab AI Transcribe Request Failed]:', err);
+              console.warn('[Transcribe API Request Failed]:', err);
             } finally {
               setIsTranscribing(false);
             }
           };
 
-          recorder.start(250); // Collect data slices every 250ms
-          // Automatically stop after 25 seconds of continuous recording
+          // Web Audio Voice Activity Detection: detects silence and automatically stops
+          try {
+            const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+            if (AudioContextClass) {
+              const audioCtx = new AudioContextClass();
+              audioContextRef.current = audioCtx;
+              const source = audioCtx.createMediaStreamSource(stream);
+              const analyser = audioCtx.createAnalyser();
+              analyser.fftSize = 256;
+              source.connect(analyser);
+
+              const dataArray = new Uint8Array(analyser.frequencyBinCount);
+              let hasSpoken = false;
+              let silenceSince: number | null = null;
+
+              vadIntervalRef.current = setInterval(() => {
+                if (!mediaRecorderRef.current || mediaRecorderRef.current.state !== 'recording') {
+                  if (vadIntervalRef.current) clearInterval(vadIntervalRef.current);
+                  return;
+                }
+                analyser.getByteFrequencyData(dataArray);
+                let sum = 0;
+                for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+                const avgVolume = sum / dataArray.length;
+
+                if (avgVolume > 14) {
+                  hasSpoken = true;
+                  silenceSince = null;
+                } else if (hasSpoken) {
+                  if (!silenceSince) {
+                    silenceSince = Date.now();
+                  } else if (Date.now() - silenceSince > 1300) {
+                    // 1.3 seconds of silence after user finished speaking -> auto-stop
+                    if (vadIntervalRef.current) clearInterval(vadIntervalRef.current);
+                    stopListening();
+                  }
+                }
+              }, 100);
+            }
+          } catch (vadInitErr) {
+            console.warn('[VAD Init Error]:', vadInitErr);
+          }
+
+          recorder.start(250);
+
+          // Maximum safety timeout
           if (autoStopTimeoutRef.current) clearTimeout(autoStopTimeoutRef.current);
           autoStopTimeoutRef.current = setTimeout(() => {
             stopListening();
           }, 25000);
-          return;
         } catch (mediaErr) {
-          console.warn('[MediaRecorder Not Available, falling back to Web Speech]:', mediaErr);
-        }
-      }
-
-      // TIER 2: Browser Web Speech API fallback runner (if mic permission denied or MediaRecorder unsupported)
-      const SpeechRecognition =
-        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-
-      if (SpeechRecognition) {
-        try {
-          if (recognitionRef.current) {
-            try {
-              recognitionRef.current.abort();
-            } catch {}
-          }
-
-          const recognition = new SpeechRecognition();
-          recognitionRef.current = recognition;
-          recognition.continuous = false;
-          recognition.interimResults = false;
-          recognition.lang =
-            lang.includes('-')
-              ? lang
-              : lang === 'am'
-              ? 'am-ET'
-              : lang === 'ti'
-              ? 'ti-ET'
-              : lang === 'om'
-              ? 'om-ET'
-              : 'en-US';
-
-          recognition.onstart = () => setIsListening(true);
-          recognition.onresult = (event: any) => {
-            const text = event.results?.[0]?.[0]?.transcript || '';
-            if (text) {
-              setTranscript(text);
-              setProvider('web-speech');
-              if (onResult) {
-                onResult(text, 'web-speech');
-              }
-            }
-          };
-          recognition.onerror = () => setIsListening(false);
-          recognition.onend = () => setIsListening(false);
-
-          recognition.start();
-        } catch (speechErr) {
-          console.warn('[Web Speech API Error]:', speechErr);
+          console.warn('[MediaRecorder Not Available]:', mediaErr);
           setIsListening(false);
         }
       }
     },
-    [onResult]
+    [onResult, stopListening]
   );
 
   return {

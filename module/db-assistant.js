@@ -165,7 +165,7 @@
   }
 
   // ── BM25 offline search ───────────────────────────────────────────────────
-  const STOPWORDS = new Set(['a','an','the','is','are','was','were','be','have','of','in','to','for','on','with','and','or','not','it','i','you','we','they','ነው','ወይም','እና','ስለ','ከ','ወደ']);
+  const STOPWORDS = new Set(['a', 'an', 'the', 'is', 'are', 'was', 'were', 'be', 'have', 'of', 'in', 'to', 'for', 'on', 'with', 'and', 'or', 'not', 'it', 'i', 'you', 'we', 'they', 'ነው', 'ወይም', 'እና', 'ስለ', 'ከ', 'ወደ']);
 
   function tokenize(text) {
     return (text || '').toLowerCase().replace(/[^\w\s\u1200-\u137F]/g, ' ').split(/\s+/).filter(t => t.length > 1 && !STOPWORDS.has(t));
@@ -974,7 +974,7 @@
         $(`tab-${tab}`).addEventListener('click', () => this._switchTab(tab));
         $(`tab-${tab}`).addEventListener('keydown', e => {
           if (e.key === 'ArrowRight') { e.preventDefault(); this._nextTab(tab, 1); }
-          if (e.key === 'ArrowLeft')  { e.preventDefault(); this._nextTab(tab, -1); }
+          if (e.key === 'ArrowLeft') { e.preventDefault(); this._nextTab(tab, -1); }
         });
       });
 
@@ -1451,13 +1451,26 @@
 
     async _toggleVoice() {
       if (this._isListening) {
+        if (this._recognition) {
+          try { this._recognition.stop(); } catch (e) { }
+        }
         if (this._recorder && this._recorder.state === 'recording') {
-          this._recorder.stop();
-        } else if (this._recognition) {
-          try { this._recognition.stop(); } catch (e) {}
+          try { this._recorder.stop(); } catch (e) { }
         }
         this._setListening(false);
       } else {
+        // Tier 1: Real-time Web Speech Recognition (auto speech-end detection, zero lag)
+        if (this._recognition) {
+          try {
+            this._recognition.start();
+            this._setListening(true);
+            return;
+          } catch (e) {
+            console.warn('[db-assistant SpeechRecognition error, falling back]:', e);
+          }
+        }
+
+        // Tier 2: MediaRecorder with server transcription
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
           try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -1507,16 +1520,7 @@
             console.warn('[MediaRecorder fallback]:', e);
           }
         }
-        if (this._recognition) {
-          try {
-            this._recognition.start();
-            this._setListening(true);
-          } catch (e) {
-            this._announce('Voice input error', 'assertive');
-          }
-        } else {
-          this._announce('Voice input not available', 'assertive');
-        }
+        this._announce('Voice input not available', 'assertive');
       }
     }
 

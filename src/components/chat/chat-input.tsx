@@ -136,11 +136,13 @@ export function ChatInput({
   const [input, setInput] = useState('');
   const [transcriptPreview, setTranscriptPreview] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const baseInputRef = useRef('');
 
   const { isListening, isTranscribing, isSupported, provider, startListening, stopListening } = useSpeechRecognition(
     (transcript) => {
       setTranscriptPreview(transcript);
-      setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+      const base = baseInputRef.current;
+      setInput(base ? `${base} ${transcript}` : transcript);
     }
   );
 
@@ -176,18 +178,19 @@ export function ChatInput({
     if (isListening) {
       stopListening();
     } else {
+      baseInputRef.current = input.trim();
       const bcpCode =
         language === 'am'
           ? 'am-ET'
           : language === 'ti'
-          ? 'ti-ET'
-          : language === 'om'
-          ? 'om-ET'
-          : language === 'so'
-          ? 'so-ET'
-          : language === 'ar'
-          ? 'ar-SA'
-          : 'en-US';
+            ? 'ti-ET'
+            : language === 'om'
+              ? 'om-ET'
+              : language === 'so'
+                ? 'so-ET'
+                : language === 'ar'
+                  ? 'ar-SA'
+                  : 'en-US';
       startListening(bcpCode);
     }
   };

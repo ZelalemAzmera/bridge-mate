@@ -27,10 +27,10 @@ async function transcribeWithHasabAI(
     const extension = mimeType.includes('wav')
       ? 'wav'
       : mimeType.includes('mp4') || mimeType.includes('m4a')
-      ? 'm4a'
-      : mimeType.includes('mp3')
-      ? 'mp3'
-      : 'webm';
+        ? 'm4a'
+        : mimeType.includes('mp3')
+          ? 'mp3'
+          : 'webm';
     formData.append(
       'audio',
       new Blob([new Uint8Array(audioBuffer)], { type: mimeType }),
